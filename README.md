@@ -11,7 +11,6 @@ Firebase Authentication dùng để xác thực, cho phép đăng nhập Google.
 -   [Tính năng](#tinh-nang)
 -   [Demo](#demo)
 -   [Công nghệ](#cong-nghe)
--   [Liên hệ](#lien-he)
 
 ## Tính năng
 
@@ -77,11 +76,3 @@ https://github.com/ke444a/ecommerce-goshop/assets/81090139/3dc1cb1f-b47d-4177-b8
 -   ![React Query](https://img.shields.io/badge/-React%20Query-FF4154?style=for-the-badge&logo=react%20query&logoColor=white)
 -   ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-0088CC?style=for-the-badge&logo=react-hook-form&logoColor=white)
 -   ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
-
-## Liên hệ
-
--   LinkedIn: [Danyl Kecha](https://www.linkedin.com/in/danylkecha/)
--   Mail: danyl.kecha.uk@gmail.com
--   GitHub: [ke444a](https://github.com/ke444a)
--   Twitter: [@ke444a](https://twitter.com/ke444a)
--   Hashnode: [blog.danylkecha.com](https://blog.danylkecha.com)
