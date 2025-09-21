@@ -1,0 +1,17 @@
+{
+  "name": "fastfood-delivery",
+  "description": "Fastfood Delivery - Ứng dụng đặt món ăn nhanh trực tuyến.",
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "copy src\\config\\serviceAccountKey.json dist\\config\\serviceAccountKey.json",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"cd ./frontend && npm run dev\" \"cd ./backend && npm run server\""
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.59.7",
+    "@typescript-eslint/parser": "^5.59.7",
+    "concurrently": "^8.0.1",
+    "eslint": "^8.41.0",
+    "eslint-plugin-react": "^7.32.2"
+  }
+}
