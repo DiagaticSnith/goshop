@@ -17,6 +17,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@dataconnect/generated": "file:src/dataconnect-generated",
     "@ngneat/falso": "^7.4.0",
     "@prisma/client": "^5.0.0",
     "cloudinary": "^1.40.0",

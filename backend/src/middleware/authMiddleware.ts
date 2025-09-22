@@ -10,7 +10,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     if (!accessToken) {
         return res.status(401).json({ message: "Authorization is required" });
     }
-
     try {
         const decodedToken = await auth.verifyIdToken(accessToken);
         req.uid = decodedToken.uid;

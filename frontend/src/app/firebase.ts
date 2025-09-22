@@ -5,12 +5,13 @@ import { getFirestore } from "firebase/firestore";
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAXicZCsAOaPd_NBmqYeEPInynFJn7w2gQ",
-    authDomain: "ecommerce-mern-1.firebaseapp.com",
-    projectId: "ecommerce-mern-1",
-    storageBucket: "ecommerce-mern-1.appspot.com",
-    messagingSenderId: "210524482098",
-    appId: "1:210524482098:web:907b6bb35716cc6607ea2b"
+  apiKey: "AIzaSyB9qJYQIF_QHTB-kPuCR6_EbH9JB6ga57U",
+  authDomain: "goshop-97f68.firebaseapp.com",
+  projectId: "goshop-97f68",
+  storageBucket: "goshop-97f68.firebasestorage.app",
+  messagingSenderId: "39347550006",
+  appId: "1:39347550006:web:a2be02eefee3af4b52a597",
+  measurementId: "G-5GLGLE7MPT"
 };
 
 const app = initializeApp(firebaseConfig);
