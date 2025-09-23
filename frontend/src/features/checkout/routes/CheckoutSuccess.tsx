@@ -3,8 +3,16 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useGetCheckoutSessionQuery } from "../../orders";
 import { useAuth } from "../../../context/AuthContext";
 import { Spinner } from "../../../components/Elements/Spinner";
+import { useDispatch } from "react-redux";
+import { clearCart } from "../../cart/cartSlice";
+import { useEffect } from "react";
 
 export const CheckoutSuccess = () => {
+    const dispatch = useDispatch();
+    useEffect(() => {
+        localStorage.removeItem("cart");
+        dispatch(clearCart());
+    }, []);
     const [searchParams] = useSearchParams();
     const checkoutSessionId = searchParams.get("id") || "";
     const { token } = useAuth();

@@ -17,11 +17,19 @@ export const Orders = () => {
 
         if (ordersUser && ordersUser?.length > 0) {
             return ordersUser.map((order) => (
-                <OrderPreview key={order.id} {...order} />
+                <OrderPreview
+                    key={order.id}
+                    {...order}
+                    items={typeof order.items === "string" ? JSON.parse(order.items) : order.items}
+                />
             ));
         } else if (ordersAdmin && ordersAdmin?.length > 0) {
             return ordersAdmin.map((order) => (
-                <OrderPreview key={order.id} {...order} />
+                <OrderPreview
+                    key={order.id}
+                    {...order}
+                    items={typeof order.items === "string" ? JSON.parse(order.items) : order.items}
+                />
             ));
         }
         return ;

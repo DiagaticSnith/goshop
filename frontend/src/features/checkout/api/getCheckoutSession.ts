@@ -1,6 +1,7 @@
 import { api } from "../../../app/api";
 import { useQuery } from "@tanstack/react-query";
 
+
 const getCheckoutSession = (sessionId: string, token: string) => {
     return api.get(`/checkout/session/${sessionId}`, {
         headers: {
