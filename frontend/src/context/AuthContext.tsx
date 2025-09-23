@@ -2,6 +2,8 @@ import { ReactNode, createContext, useContext, useEffect, useState } from "react
 import { auth, googleProvider } from "../app/firebase";
 import { User, signInWithEmailAndPassword, UserCredential, signInWithCustomToken, signInWithPopup } from "firebase/auth";
 import { useRegisterMutation } from "../features/auth";
+import { useDispatch } from "react-redux";
+import { clearCart } from "../features/cart/cartSlice";
 
 interface Props {
     children: ReactNode;
@@ -36,6 +38,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children } : Props) => {
+    const dispatch = useDispatch();
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [token, setToken] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -74,7 +77,9 @@ export const AuthProvider = ({ children } : Props) => {
     };
 
     const signOut = () => {
-        auth.signOut();
+    auth.signOut();
+    localStorage.removeItem("cart");
+    dispatch(clearCart());
     };
 
     useEffect(() => {

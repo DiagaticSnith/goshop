@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config({ path: "../.env" });
+dotenv.config({ path: "D:/All Projects/goshop/backend/.env" });
 import { errorMiddleware } from "./middleware/errorMiddleware";
 import productRoutes from "./routes/products";
 import usersRoutes from "./routes/users";
@@ -26,7 +26,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-app.post("/webhook", express.raw({type: "application/json"}), webhook);
+app.post("/api/webhook", express.raw({type: "application/json"}), webhook);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads/", express.static(path.join(process.cwd(), "/uploads/")));

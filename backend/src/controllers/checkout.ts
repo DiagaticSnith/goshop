@@ -30,8 +30,16 @@ export const getCheckoutItems = async (req: Request, res: Response, next: NextFu
 
 export const createCheckoutSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log("Request body:", req.body);
+        const baseUrl = process.env.NODE_ENV === "production" 
+            ? (process.env.FRONTEND_URL || "https://yourdomain.com")
+            : (process.env.FRONTEND_URL || "http://localhost:5173");
+        const successUrl = `${baseUrl}/checkout/success?id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = `${baseUrl}/checkout/cancel`; // Thêm cancel URL nếu cần
+
         const session = await stripe.checkout.sessions.create({
-            success_url: (process.env.NODE_ENV === "production" ? process.env.FRONTEND_URL : "http://localhost:5173") + "/checkout/success?id={CHECKOUT_SESSION_ID}",
+            success_url: successUrl,
+            cancel_url: cancelUrl, // Tùy chọn, để user quay lại nếu hủy
             mode: "payment",
             line_items: req.body.lineItems,
             currency: "usd",
@@ -39,8 +47,15 @@ export const createCheckoutSession = async (req: Request, res: Response, next: N
                 customerId: req.body.userId
             }
         });
-        res.status(201).json({ sessionId: session.id });
-    } catch (error) {
+        console.log("Session created:", session.id);
+        console.log("Checkout URL:", session.url); // Log URL để test
+
+        res.status(201).json({ 
+            sessionId: session.id, 
+            url: session.url // Trả về URL đầy đủ
+        });
+    } catch (error: any) {
+        console.error("Checkout session error:", error.code, error.message, error.stack);
         next({ message: "Unable to create the checkout session", error });
     }
 };

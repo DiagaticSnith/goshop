@@ -5,46 +5,55 @@ import Stripe from "stripe";
 import { processOrderAddress } from "../utils/processOrderAddress";
 
 export const webhook = async (req: Request, res: Response) => {
-    const sig = req.headers["stripe-signature"] || "";
+    const sig = req.headers["stripe-signature"] as string;
+    const rawBody = req.body; // Đã là Buffer do express.raw
+
     let event;
     try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.ENDPOINT_SECRET || "");
-    } catch (err) {
-        return res.status(400).json(err);
+        event = stripe.webhooks.constructEvent(rawBody, sig, process.env.ENDPOINT_SECRET || "");
+    } catch (err: any) {
+        console.error("Stripe signature error:", {
+            message: err.message,
+            signature: sig,
+            secret: process.env.ENDPOINT_SECRET?.substring(0, 5) + "...",
+            rawBody: rawBody.toString()
+        });
+        return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the event
     let order;
     if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
+
+
         const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+
         const items = await Promise.all(lineItems.data.map(async (lineItem) => {
             const product = await prisma.product.findUnique({
-                where: {
-                    priceId: lineItem.price?.id 
-                }
+                where: { priceId: lineItem.price?.id || '' }
             });
-            return { product, quantity: lineItem.quantity };
+            return { product, quantity: lineItem.quantity || 0 };
         }));
 
-
-
-        order = await prisma.order.create({
-            data: {
-                amount: (session.amount_total || 0) / 100,
-                userId: session.metadata?.customerId || "",
-                items,
-                country: session.customer_details?.address?.country || "",
-                address: processOrderAddress(session.customer_details?.address as Stripe.Address | null),
-                sessionId: session.id,
-                createdAt: new Date(session.created)
-            }
-        });
-    }
-    
-    if (order) {
-        return res.status(201).json(order);
+        try {
+            order = await prisma.order.create({
+                data: {
+                    amount: (session.amount_total || 0) / 100,
+                    userId: session.metadata?.customerId || "",
+                    items: JSON.stringify(items),
+                    country: session.customer_details?.address?.country || "",
+                    address: processOrderAddress(session.customer_details?.address as Stripe.Address | null),
+                    sessionId: session.id,
+                    createdAt: new Date(session.created * 1000)
+                }
+            });
+        } catch (err: any) {
+            console.error("Prisma create order error:", err.message);
+        }
     }
 
-    res.status(200).json({ message: "Event received and processed!" });
+    res.status(order ? 201 : 200).json({
+        message: order ? "Order created" : "Event received",
+        order
+    });
 };
