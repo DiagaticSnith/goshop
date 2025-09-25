@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useRegisterWithGoogleMutation } from "../api/registerWithGoogle";
 import { Spinner } from "../../../components/Elements/Spinner";
 import { useState } from "react";
+import { useSessionLoginMutation } from "../api/login";
 
 const loginValidationSchema = yup.object({
     email: yup
@@ -23,6 +24,7 @@ type LoginForm = yup.InferType<typeof loginValidationSchema>;
 
 
 const LoginForm = () => {
+    const { mutateAsync: sessionLogin } = useSessionLoginMutation();
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors }, setValue } = useForm<LoginForm>({
         resolver: yupResolver(loginValidationSchema),
@@ -37,6 +39,11 @@ const LoginForm = () => {
             const password = data.password;
             const userCredentials = await signIn(email, password);
             if (userCredentials) {
+                // Lấy idToken từ Firebase
+                const idToken = await userCredentials.user.getIdToken();
+                // Gọi backend để lấy thông tin user (có role)
+                const userInfo = await sessionLogin(idToken);
+                localStorage.setItem("userInfo", JSON.stringify(userInfo));
                 navigate("/");
             }
         } catch (error) {
@@ -144,5 +151,4 @@ const LoginForm = () => {
         </>
     );
 };
-
 export default LoginForm;
