@@ -1,5 +1,4 @@
 import Navbar from "../../../components/Elements/Navbar";
-import { useState } from "react";
 import { BiSolidShoppingBags, BiSolidUser } from "react-icons/bi";
 import { TbTruckDelivery } from "react-icons/tb";
 import { AdminProducts } from "../../products/components/AdminProducts";
@@ -7,9 +6,33 @@ import Profile from "../../users/components/Profile";
 import { useAuth } from "../../../context/AuthContext";
 import { Orders } from "../../orders/components/Orders";
 import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export const Dashboard = () => {
     const { isAdmin } = useAuth();
+    const [isReloading, setIsReloading] = useState(false);
+    useEffect(() => {
+        const userInfo = localStorage.getItem("userInfo");
+        if (userInfo) {
+            try {
+                const parsed = JSON.parse(userInfo);
+                if ((parsed.role === "ADMIN" && !isAdmin) || (parsed.role !== "ADMIN" && isAdmin)) {
+                    setIsReloading(true);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                }
+            } catch {}
+        }
+    }, [isAdmin]);
+    if (isReloading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="loader" /> {/* hoặc dùng Spinner component */}
+                <span>Reloading, Please Wait....</span>
+            </div>
+        );
+    }
     const location = useLocation();
     const [selectedTab, setSelectedTab] = useState<number>(location.state?.destination === "profile" ? 2 : (isAdmin ? 0 : 1));
 
@@ -54,6 +77,7 @@ export const Dashboard = () => {
                     </li>
                 </ul>
             </div>
+
             {isAdmin && selectedTab === 0 && <AdminProducts />}
             {selectedTab === 1 && <Orders />}
             {selectedTab === 2 && <Profile />}

@@ -19,11 +19,10 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         }
 
         // Debug: Log thông tin đầu vào
-        console.log("Attempting to create user with email:", email);
 
         // Bước 1: Tạo user trong Firebase (chỉ email và password)
         const userFirebase = await auth.createUser({ email, password });
-        console.log("Created user with UID:", userFirebase.uid); // Log sau khi tạo thành công
+    
 
         // Bước 2: Cập nhật displayName
         await auth.updateUser(userFirebase.uid, {

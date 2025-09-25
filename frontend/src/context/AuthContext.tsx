@@ -10,14 +10,14 @@ interface Props {
 }
 
 interface IAuthContext {
-  currentUser: User | null;
-  isAdmin: boolean | undefined;
-  token: string;
-  signIn: (email: string, password: string) => Promise<UserCredential> | null;
-  signInWithToken: (token: string) => Promise<UserCredential> | null;
-  signInWithGoogle: () => Promise<UserCredential> | null;
-  signUp: (data: IRegisterCredentials) => Promise<UserCredential> | null;
-  signOut: () => void;
+    currentUser: User | null;
+    isAdmin: boolean | undefined;
+    token: string;
+    signIn: (email: string, password: string) => Promise<UserCredential> | null;
+    signInWithToken: (token: string) => Promise<UserCredential> | null;
+    signInWithGoogle: () => Promise<UserCredential> | null;
+    signUp: (data: IRegisterCredentials) => Promise<UserCredential> | null;
+    signOut: () => void;
 }
 
 
@@ -37,13 +37,13 @@ export const useAuth = () => {
     return useContext(AuthContext);
 };
 
-export const AuthProvider = ({ children } : Props) => {
+export const AuthProvider = ({ children }: Props) => {
     const dispatch = useDispatch();
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [token, setToken] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isAdmin, setIsAdmin] = useState<boolean>();
-    
+
     const { mutateAsync: register } = useRegisterMutation();
 
     const handleCurrentUser = async (user: User | null) => {
@@ -51,10 +51,22 @@ export const AuthProvider = ({ children } : Props) => {
             setCurrentUser(user);
             const decoded = await user.getIdTokenResult();
             setToken(decoded.token);
-            setIsAdmin(decoded.claims.role === "ADMIN");
+            // Lấy role từ backend nếu có
+            const userInfo = localStorage.getItem("userInfo");
+            if (userInfo) {
+                try {
+                    const parsed = JSON.parse(userInfo);
+                    setIsAdmin(parsed.role === "ADMIN");
+                } catch {
+                    setIsAdmin(false);
+                }
+            } else {
+                setIsAdmin(false);
+            }
         } else {
             setCurrentUser(null);
             setToken("");
+            setIsAdmin(undefined);
         }
         setIsLoading(false);
     };
@@ -77,9 +89,9 @@ export const AuthProvider = ({ children } : Props) => {
     };
 
     const signOut = () => {
-    auth.signOut();
-    localStorage.removeItem("cart");
-    dispatch(clearCart());
+        auth.signOut();
+        localStorage.removeItem("cart");
+        dispatch(clearCart());
     };
 
     useEffect(() => {
@@ -100,7 +112,7 @@ export const AuthProvider = ({ children } : Props) => {
 
     return (
         <AuthContext.Provider value={value}>
-            { !isLoading && children }
+            {!isLoading && children}
         </AuthContext.Provider>
     );
 };

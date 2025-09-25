@@ -1,4 +1,4 @@
-/// <reference types="Cypress" />
+/// <reference types="cypress" />
 import loginSel from "../selectors/login.sel";
 
 describe("Login", () => {

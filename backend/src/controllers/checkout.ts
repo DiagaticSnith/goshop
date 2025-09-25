@@ -30,7 +30,6 @@ export const getCheckoutItems = async (req: Request, res: Response, next: NextFu
 
 export const createCheckoutSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.log("Request body:", req.body);
         const baseUrl = process.env.NODE_ENV === "production" 
             ? (process.env.FRONTEND_URL || "https://yourdomain.com")
             : (process.env.FRONTEND_URL || "http://localhost:5173");
@@ -47,8 +46,6 @@ export const createCheckoutSession = async (req: Request, res: Response, next: N
                 customerId: req.body.userId
             }
         });
-        console.log("Session created:", session.id);
-        console.log("Checkout URL:", session.url); // Log URL để test
 
         res.status(201).json({ 
             sessionId: session.id, 
