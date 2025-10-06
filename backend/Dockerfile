@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1
 
 # Adjust NODE_VERSION as desired
-ARG NODE_VERSION=18.16.0
+ARG NODE_VERSION=18.18.0
 FROM node:${NODE_VERSION}-slim as base
 
 LABEL fly_launch_runtime="Node.js/Prisma"
@@ -20,9 +20,13 @@ FROM base as build
 RUN apt-get update -qq && \
     apt-get install -y build-essential openssl pkg-config python-is-python3
 
-# Install node modules
-COPY --link package-lock.json package.json ./
-RUN npm ci --include=dev
+# Install node modules (support environments without package-lock.json)
+COPY --link package*.json ./
+RUN if [ -f package-lock.json ]; then \
+            npm ci --include=dev; \
+        else \
+            npm install --include=dev; \
+        fi
 
 # Generate Prisma Client
 COPY --link prisma .
@@ -51,4 +55,5 @@ COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+# Run the built Node app directly. We set NODE_ENV above in the image, so we don't need cross-env here.
+CMD [ "node", "dist/index.js" ]
