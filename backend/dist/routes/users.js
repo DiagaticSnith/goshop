@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const users_1 = require("../controllers/users");
+const multerMiddleware_1 = require("../middleware/multerMiddleware");
+const processImageUpload_1 = require("../middleware/processImageUpload");
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const router = (0, express_1.Router)();
+router.patch("/update/:id", authMiddleware_1.authMiddleware, multerMiddleware_1.multerUpload.single("avatar"), processImageUpload_1.processImageUpload, users_1.updateUser);
+router.get("/:id", authMiddleware_1.authMiddleware, users_1.getUserByFirebaseId);
+exports.default = router;

@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const checkout_1 = require("../controllers/checkout");
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const router = (0, express_1.Router)();
+router.use(authMiddleware_1.authMiddleware);
+router.post("/create-session", checkout_1.createCheckoutSession);
+router.get("/session/items/:id", checkout_1.getCheckoutItems);
+router.get("/session/:id", checkout_1.getCheckoutSession);
+exports.default = router;
