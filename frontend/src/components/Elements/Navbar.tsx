@@ -70,24 +70,24 @@ const Navbar = () => {
                         Dashboard
                                         </Link>
                                     </li>
-                                    <li>
-                                        <Link
-                                            to="/dashboard"
-                                            state={{ destination: "profile" }}
-                                            className="block px-4 py-2 hover:bg-gray-100"
-                                        >
-                        Settings
-                                        </Link>
-                                    </li>
                                 </ul>
-                                <div className="py-2">
-                                    <button
-                                        onClick={handleSignOut}
-                                        className="px-4 py-2 text-left hover:bg-gray-100 w-full text-sm text-dark"
-                                    >
-                      Sign out
-                                    </button>
-                                </div>
+                                        <div className="py-2">
+                                            {currentUser ? (
+                                                <button
+                                                    onClick={handleSignOut}
+                                                    className="px-4 py-2 text-left hover:bg-gray-100 w-full text-sm text-dark"
+                                                >
+                                                    Sign out
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => navigate('/auth/login')}
+                                                    className="px-4 py-2 text-left hover:bg-gray-100 w-full text-sm text-dark"
+                                                >
+                                                    Sign in
+                                                </button>
+                                            )}
+                                        </div>
                             </div>
                         )}
                     </li>
