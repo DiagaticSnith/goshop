@@ -1,9 +1,9 @@
 
-# Fastfood Delivery
+# Goshop
 
-Ứng dụng web đặt món ăn nhanh trực tuyến, xây dựng với React, Node.js, Express, MySQL (Prisma), và Stripe. Người dùng có thể duyệt thực đơn, thêm món ăn vào giỏ hàng, và đặt món. Quản trị viên có thể quản lý thực đơn và đơn hàng.
+Ứng dụng web đặt nội thất nhanh trực tuyến, xây dựng với React, Node.js, Express, MySQL (Prisma), và Stripe. Người dùng có thể duyệt thực đơn, thêm sản phẩm vào giỏ hàng, và đặt món. Quản trị viên có thể quản lý thực đơn và đơn hàng.
 </br></br>
-Firebase Authentication dùng để xác thực, cho phép đăng nhập Google. Redux Toolkit quản lý giỏ hàng và danh sách món ăn yêu thích. Cloudinary lưu trữ hình ảnh món ăn và avatar. Thanh toán qua Stripe. Prisma ORM kết nối MySQL. TailwindCSS dùng để thiết kế giao diện. Kiểm thử E2E với Cypress.
+Firebase Authentication dùng để xác thực, cho phép đăng nhập Google. Redux Toolkit quản lý giỏ hàng và danh sách sản phẩm yêu thích. Cloudinary lưu trữ hình ảnh sản phẩm và avatar. Thanh toán qua Stripe. Prisma ORM kết nối MySQL. TailwindCSS dùng để thiết kế giao diện. Kiểm thử E2E với Cypress.
 </br>
 
 ## Mục lục
@@ -18,22 +18,22 @@ Firebase Authentication dùng để xác thực, cho phép đăng nhập Google.
     -   Đăng nhập Google
     -   Phân quyền người dùng
 -   Quản lý thực đơn
-    -   Duyệt các món ăn
-    -   Tìm kiếm món ăn theo tên hoặc mô tả
-    -   Lọc món ăn theo loại
-    -   Sắp xếp món ăn theo giá
-    -   Thêm/xóa món ăn vào giỏ hàng
-    -   Thêm/xóa món ăn vào danh sách yêu thích
+    -   Duyệt các sản phẩm
+    -   Tìm kiếm sản phẩm theo tên hoặc mô tả
+    -   Lọc sản phẩm theo loại
+    -   Sắp xếp sản phẩm theo giá
+    -   Thêm/xóa sản phẩm vào giỏ hàng
+    -   Thêm/xóa sản phẩm vào danh sách yêu thích
 -   Quản lý đơn hàng
-    -   Đặt món
+    -   Đặt đơn
     -   Xem chi tiết đơn hàng
 -   Thanh toán
     -   Thanh toán qua Stripe
 -   Hồ sơ người dùng
     -  Xem và cập nhật thông tin cá nhân
 -   Quản trị viên
-    -   Xem tất cả món ăn
-    -   Tạo, cập nhật, xóa món ăn
+    -   Xem tất cả sản phẩm
+    -   Tạo, cập nhật, xóa sản phẩm
     -   Xem tất cả đơn hàng
     -   Xem và cập nhật thông tin cá nhân
 -   Giao diện đáp ứng trên thiết bị di động
@@ -47,7 +47,7 @@ https://github.com/ke444a/ecommerce-goshop/assets/81090139/3dc1cb1f-b47d-4177-b8
 ### Trang chủ
 <img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/8c35717c-ca67-49f6-8a96-c02fc36e08f7">
 
-### Thực đơn
+### Sản phẩm
 <img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/c0cdd67a-a367-4d50-9255-2b10491d244b">
 
 ### Giỏ hàng
