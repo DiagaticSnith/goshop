@@ -5,8 +5,6 @@ import { useMemo } from "react";
 import { FaArrowRightLong } from "react-icons/fa6";
 import CheckoutTotalPrice from "../components/CheckoutTotalPrice";
 import CartProductsList from "../components/CartProductsList";
-import { getStripe } from "../../../utils/getStripe";
-import { useCreateCheckoutSessionMutation } from "../../checkout/api/createCheckoutSession";
 import { useAuth } from "../../../context/AuthContext";
 import { Link } from "react-router-dom";
 
@@ -25,7 +23,7 @@ const Cart = () => {
         );
     }, [cartItems]);
 
-    const { mutateAsync: createCheckout } = useCreateCheckoutSessionMutation(token);
+   
     const handleCheckout = async () => {
         const lineItems = cartItems.map((cartItem) => ({
             price: cartItem.product.priceId,
@@ -36,9 +34,8 @@ const Cart = () => {
             userId: currentUser?.uid || "",
         };
 
-        const { sessionId } = await createCheckout(sessionData);
-        const stripe = await getStripe();
-        stripe?.redirectToCheckout({ sessionId });
+        
+        
     };
 
     return (
@@ -54,7 +51,6 @@ const Cart = () => {
                         <>
                             <button
                                 className="mt-4 mb-2 text-white rounded-md w-full text-center py-3 text-sm transition hover:bg-opacity-90 font-semibold bg-primary"
-                                onClick={handleCheckout}
                             >
               Checkout
                             </button>

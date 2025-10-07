@@ -4,7 +4,7 @@ import { CartRoutes } from "../features/cart";
 import { ProductRoutes } from "../features/products";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Dashboard, Home } from "../features/misc";
-import { CheckoutRoutes } from "../features/checkout";
+
 
 export const AppRoutes = () => {
     return (
@@ -18,7 +18,6 @@ export const AppRoutes = () => {
 
             <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/checkout/*" element={<CheckoutRoutes />} />
             </Route>
         </Routes>
     );
