@@ -43,8 +43,11 @@ const LoginForm = () => {
                 const idToken = await userCredentials.user.getIdToken();
                 // Gọi backend để lấy thông tin user (có role)
                 const userInfo = await sessionLogin(idToken);
+                // clear any previous cart to avoid mixing carts between users
+                try { localStorage.removeItem("cart"); } catch(e) {}
                 localStorage.setItem("userInfo", JSON.stringify(userInfo));
-                navigate("/");
+                // full reload so app picks up new userInfo and rehydrates state
+                window.location.href = "/";
             }
         } catch (error) {
             toast.error("Invalid email or password");
@@ -64,7 +67,8 @@ const LoginForm = () => {
                 firebaseId: userCredentials.user.uid || ""
             };
             registerWithGoogle(credentials);
-            navigate("/");
+            try { localStorage.removeItem("cart"); } catch(e) {}
+            window.location.href = "/";
         }
     };
 

@@ -85,12 +85,26 @@ export const AuthProvider = ({ children }: Props) => {
 
     const signUp = async (data: IRegisterCredentials) => {
         const { token } = await register(data);
+        // Clear any previous user-specific localStorage (cart, userInfo) to avoid stale data
+        try {
+            localStorage.removeItem("cart");
+            localStorage.removeItem("userInfo");
+        } catch (e) {
+            // ignore
+        }
+        // reset redux cart state
+        dispatch(clearCart());
+
         return await signInWithToken(token);
     };
 
     const signOut = () => {
         auth.signOut();
-        localStorage.removeItem("cart");
+        // remove user related local storage keys
+        try {
+            localStorage.removeItem("cart");
+            localStorage.removeItem("userInfo");
+        } catch (e) {}
         dispatch(clearCart());
     };
 

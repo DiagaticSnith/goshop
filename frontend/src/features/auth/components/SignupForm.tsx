@@ -43,7 +43,9 @@ const SignupForm = () => {
             };
         
             await signUp(credentials);
-            navigate("/");
+            // ensure no stale localStorage remains and reload app to rehydrate state
+            try { localStorage.removeItem("cart"); localStorage.removeItem("userInfo"); } catch(e) {}
+            window.location.href = "/"; // full reload
         } finally {
             setIsLoading(false);
         }
@@ -58,7 +60,8 @@ const SignupForm = () => {
                 firebaseId: userCredentials.user.uid || "",
             };
             registerWithGoogle(credentials);
-            navigate("/");
+            try { localStorage.removeItem("cart"); localStorage.removeItem("userInfo"); } catch(e) {}
+            window.location.href = "/";
         }
     };
 
