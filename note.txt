@@ -1,5 +1,0 @@
-Chạy backend và frontend
-Tải stripe CLI về và chạy 
-./stripe listen --forward-to http://localhost:3000/api/webhook
-nếu mà ENDPOINT_SECRET khác whsec_737b0af4ae41beac2f445caa5ae9fcf7c428b13d9d5e1f78b7e7dddfc64db73c 
-thì vào .env copy lại từ terminal stripe và chạy lại backend
