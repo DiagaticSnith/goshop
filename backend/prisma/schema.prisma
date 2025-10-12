@@ -15,6 +15,8 @@ model User {
   role       Role    @default(USER)
   avatar     String?
   Order      Order[]
+  // A user can have one cart (optional)
+  cart       Cart?
 }
 
 enum Role {
@@ -28,11 +30,20 @@ model Product {
   description   String    @db.Text
   price         Float
   stockQuantity Int
+  weight        Float?
+  width         Float?
+  height        Float?
+  brand         String?
+  material      String?
   image         String
   category      Category? @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
   categoryId    Int?
   priceId       String    @unique
   createdAt     DateTime  @default(now())
+
+  // Relations
+  cartItems     CartItem[]
+  orderDetails  OrderDetails[]
 
   @@fulltext([name])
   @@fulltext([name, description])
@@ -55,4 +66,38 @@ model Order {
   address   String
   sessionId String   @unique
   createdAt DateTime @default(now())
+  // opposite relation for OrderDetails
+  details   OrderDetails[]
+}
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  // Relation: a cart belongs to a user and has many cart items
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [firebaseId])
+  items     CartItem[]
+}
+
+model CartItem {
+  id            Int     @id @default(autoincrement())
+  totalQuantity Int
+  // relation to cart
+  cartId        Int
+  cart          Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  // relation to product
+  productId     String
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model OrderDetails {
+  id            Int     @id @default(autoincrement())
+  totalQuantity Int
+  totalPrice    Float
+  // link back to order
+  orderId       Int
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // link to product
+  productId     String
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

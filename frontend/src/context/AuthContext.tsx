@@ -3,7 +3,8 @@ import { auth, googleProvider } from "../app/firebase";
 import { User, signInWithEmailAndPassword, UserCredential, signInWithCustomToken, signInWithPopup } from "firebase/auth";
 import { useRegisterMutation } from "../features/auth";
 import { useDispatch } from "react-redux";
-import { clearCart } from "../features/cart/cartSlice";
+import { clearCart, setCart } from "../features/cart/cartSlice";
+import * as cartApi from "../features/cart/api";
 
 interface Props {
     children: ReactNode;
@@ -62,6 +63,15 @@ export const AuthProvider = ({ children }: Props) => {
                 }
             } else {
                 setIsAdmin(false);
+            }
+            // fetch server cart and sync to redux
+            try {
+                const serverCart = await cartApi.getCart(decoded.token);
+                // serverCart.items has shape with product and totalQuantity
+                const items = (serverCart.items || []).map((it: any) => ({ product: it.product as IProduct, quantity: it.totalQuantity }));
+                dispatch(setCart(items));
+            } catch (e) {
+                // ignore if unable to fetch
             }
         } else {
             setCurrentUser(null);

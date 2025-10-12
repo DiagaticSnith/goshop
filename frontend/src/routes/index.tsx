@@ -4,6 +4,7 @@ import { CartRoutes } from "../features/cart";
 import { ProductRoutes } from "../features/products";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Dashboard, Home } from "../features/misc";
+import AdminDashboard from "../features/misc/routes/AdminDashboard";
 import { CheckoutRoutes } from "../features/checkout";
 
 export const AppRoutes = () => {
@@ -18,6 +19,7 @@ export const AppRoutes = () => {
 
             <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/checkout/*" element={<CheckoutRoutes />} />
             </Route>
         </Routes>

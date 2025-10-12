@@ -16,10 +16,16 @@ const CreateProductPopup = (props: Props) => {
     const handleCloseCreateProduct = () => props.setIsShowCreateProduct(false);
 
     const onFormSubmit = (data: ProductFormType, preview: string) => {
-        const product = {
+        const product: any = {
             ...data,
             image: data.image as Blob,
             imagePath: preview as string,
+            // coerce numeric fields
+            weight: data.weight ? Number(data.weight) : undefined,
+            width: data.width ? Number(data.width) : undefined,
+            height: data.height ? Number(data.height) : undefined,
+            brand: data.brand || undefined,
+            material: data.material || undefined,
         };
         createProduct(product);
         props.setIsShowCreateProduct(false);

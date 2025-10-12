@@ -17,10 +17,15 @@ const EditProductPopup = ({setIsShowEditProduct, ...product}: Props) => {
     const { mutate: updateProduct } = useUpdateProductMutation(product.id, token);
 
     const onFormSubmit = async (data: ProductFormType, preview: string) => {
-        const updatedProduct = {
+        const updatedProduct: any = {
             ...data,
             image: data.image as Blob,
             imagePath: preview as string,
+            weight: data.weight ? Number(data.weight) : undefined,
+            width: data.width ? Number(data.width) : undefined,
+            height: data.height ? Number(data.height) : undefined,
+            brand: data.brand || undefined,
+            material: data.material || undefined,
         };
         updateProduct(updatedProduct);
         setIsShowEditProduct(false);

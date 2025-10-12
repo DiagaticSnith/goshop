@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "../../../context/AuthContext";
 import { useRegisterWithGoogleMutation } from "../api/registerWithGoogle";
@@ -25,7 +25,6 @@ type SignupForm = yup.InferType<typeof registerValidationSchema>;
 
 const SignupForm = () => {
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors } } = useForm<SignupForm>({
         resolver: yupResolver<SignupForm>(registerValidationSchema),
     });

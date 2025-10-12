@@ -7,7 +7,8 @@ import { MdOutlineRemoveShoppingCart } from "react-icons/md";
 
 export const Orders = () => {
     const { token, isAdmin, currentUser } = useAuth();
-    const { data: ordersAdmin } = useGetAllOrdersQuery(token, isAdmin);
+    const { data: ordersAdminResp } = useGetAllOrdersQuery(token, isAdmin);
+    const ordersAdmin = ordersAdminResp?.data;
     const { data: ordersUser } = useGetOrdersByUserQuery(currentUser?.uid || "", token, isAdmin);
 
     const ordersComponent = useMemo(() => {
@@ -16,7 +17,7 @@ export const Orders = () => {
         }
 
         if (ordersUser && ordersUser?.length > 0) {
-            return ordersUser.map((order) => (
+            return ordersUser.map((order: IOrder) => (
                 <OrderPreview
                     key={order.id}
                     {...order}
@@ -24,7 +25,7 @@ export const Orders = () => {
                 />
             ));
         } else if (ordersAdmin && ordersAdmin?.length > 0) {
-            return ordersAdmin.map((order) => (
+            return ordersAdmin.map((order: IOrder) => (
                 <OrderPreview
                     key={order.id}
                     {...order}

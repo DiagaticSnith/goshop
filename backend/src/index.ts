@@ -9,6 +9,7 @@ import checkoutRoutes from "./routes/checkout";
 import ordersRoutes from "./routes/orders";
 import authRoutes from "./routes/auth";
 import categoryRoutes from "./routes/category";
+import cartRoutes from "./routes/cart";
 import { webhook } from "./controllers/webhook";
 import path from "path";
 import { v2 as cloudinary } from "cloudinary";
@@ -34,6 +35,7 @@ app.use("/products", productRoutes);
 app.use("/users", usersRoutes);
 app.use("/orders", ordersRoutes);
 app.use("/checkout", checkoutRoutes);
+app.use("/cart", cartRoutes);
 app.use("/auth", authRoutes);
 app.use("/category", categoryRoutes);
 

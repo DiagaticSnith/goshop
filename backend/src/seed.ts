@@ -28,12 +28,17 @@ const seedProducts = async () => {
 
         const category = categories[Math.floor(Math.random() * 10)];
         await prisma.product.create({
-            data: {
+            data: ({
                 id: stripeProduct.id,
                 name: product.title,
                 description: product.description,
                 price: Number(product.price),
                 stockQuantity: Math.floor(Math.random() * 100),
+                weight: Number((Math.random() * 5).toFixed(2)),
+                width: Number((Math.random() * 50).toFixed(2)),
+                height: Number((Math.random() * 50).toFixed(2)),
+                brand: "FalsoBrand",
+                material: "Plastic",
                 priceId: stripeProduct.default_price as string,
                 image: product.image,
                 category: {
@@ -46,7 +51,7 @@ const seedProducts = async () => {
                         }
                     }
                 }
-            }
+            } as any)
         });
     }
 };

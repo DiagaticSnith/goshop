@@ -1,17 +1,14 @@
 import Navbar from "../../../components/Elements/Navbar";
-import { MdFavoriteBorder, MdFavorite } from "react-icons/md";
+ 
 import { ProductQuantitySelectBox } from "../../../components/Form";
 import { useParams } from "react-router-dom";
 import { useGetSingleProductQuery } from "../api/getSingleProduct";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../app/store";
-import { addToCart } from "../../cart/cartSlice";
+import { addToCart, setCart } from "../../cart/cartSlice";
+import { useAuth } from "../../../context/AuthContext";
+import * as cartApi from "../../cart/api";
 import { ChangeEvent, useState } from "react";
-import {
-    removeFavorite,
-    addFavorite,
-    selectFavorites,
-} from "../favoritesSlice";
 import { FcCheckmark } from "react-icons/fc";
 import { RxCross1 } from "react-icons/rx";
 import { Spinner } from "../../../components/Elements/Spinner";
@@ -21,10 +18,6 @@ const Product = () => {
     const { productId } = useParams();
     const dispatch = useDispatch<AppDispatch>();
     const [productQuantity, setProductQuantity] = useState<number>(1);
-    const favorites = useSelector(selectFavorites);
-    const [isFavorite, setIsFavorite] = useState<boolean>(
-        favorites.some((favorite) => favorite.id === productId)
-    );
 
     const {
         data: product,
@@ -35,17 +28,24 @@ const Product = () => {
         return null;
     }
 
-    const handleAddToCart = () => {
+    const { token } = useAuth();
+    const handleAddToCart = async () => {
         dispatch(addToCart({ product, quantity: productQuantity }));
+        if (token) {
+            try {
+                await cartApi.addOrUpdateCartItem(token, product.id, productQuantity);
+                const serverCart = await cartApi.getCart(token);
+                const items = (serverCart.items || []).map((it: any) => ({ product: it.product as IProduct, quantity: it.totalQuantity }));
+                dispatch(setCart(items));
+            } catch (e) {
+                console.error('Unable to sync cart', e);
+                toast.error('Unable to save cart to server');
+            }
+        }
         toast.success("Product added to the cart");
     };
 
-    const handleFavoriteChange = () => {
-        isFavorite
-            ? dispatch(removeFavorite({ id: productId || "" }))
-            : dispatch(addFavorite(product));
-        setIsFavorite((prevFavorite) => !prevFavorite);
-    };
+    // favorites removed
 
     const handleQuantityChange = (e: ChangeEvent<HTMLSelectElement>) => {
         const newQuantity = Number(e.target.value);
@@ -69,6 +69,20 @@ const Product = () => {
                     <h3 className="font-semibold text-xl sm:text-3xl mb-1">{product.name}</h3>
                     <h4 className="font-semibold text-lg sm:text-2xl mb-8">${product.price}</h4>
                     <p className="text-secondary mb-8">{product.description}</p>
+                    <div className="mb-4 text-sm text-gray-600">
+                        <div>Price ID: {product.priceId}</div>
+                        <div>Created: {new Date(product.createdAt).toLocaleString()}</div>
+                        {typeof product.category === 'object' && product.category && 'name' in product.category ? (
+                            <div>Category: {(product.category as any).name}</div>
+                        ) : (
+                            product.categoryId && <div>Category ID: {product.categoryId}</div>
+                        )}
+                        {product.brand && <div>Brand: {product.brand}</div>}
+                        {product.material && <div>Material: {product.material}</div>}
+                        {(product.weight || product.width || product.height) && (
+                            <div>Dimensions: {product.weight ? `${product.weight}kg ` : ''}{product.width ? `${product.width}x` : ''}{product.height ? `${product.height}cm` : ''}</div>
+                        )}
+                    </div>
                     <div className="flex items-center mb-8">
                         <ProductQuantitySelectBox
                             quantity={productQuantity}
@@ -96,13 +110,7 @@ const Product = () => {
                         >
               Add to cart
                         </button>
-                        <button onClick={handleFavoriteChange}>
-                            {isFavorite ? (
-                                <MdFavorite className="w-6 h-6 animate-fadeIn" />
-                            ) : (
-                                <MdFavoriteBorder className="w-6 h-6 animate-fadeIn" />
-                            )}
-                        </button>
+                        {/* favorites button removed */}
                     </div>
                 </div>
             </div>

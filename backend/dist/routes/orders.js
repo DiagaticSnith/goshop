@@ -8,5 +8,6 @@ const router = (0, express_1.Router)();
 router.use(authMiddleware_1.authMiddleware);
 router.get("/", (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), orders_1.getAllOrders);
 router.get("/user/:id", orders_1.getOrdersByUserId);
-router.get("/", orders_1.getAllOrders);
+router.get("/stats", (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), orders_1.getOrdersStats);
+router.get("/:id", orders_1.getOrderById);
 exports.default = router;

@@ -1,6 +1,5 @@
 import { BsFillBasket3Fill } from "react-icons/bs";
 import { ImSearch } from "react-icons/im";
-import { MdFavorite } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +10,7 @@ import defaultAvatar from "../../assets/images/default-avatar.webp";
 const Navbar = () => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
 
-    const { signOut, currentUser } = useAuth();
+    const { signOut, currentUser, isAdmin } = useAuth();
     const navigate = useNavigate();
     const handleNavClick = () => {
         setDropdownOpen(prevState => !prevState);
@@ -39,11 +38,7 @@ const Navbar = () => {
                             <BsFillBasket3Fill />
                         </Link>
                     </li>
-                    <li className="transition-colors hover:text-dark ml-3">
-                        <Link to="/products/favorites">
-                            <MdFavorite />
-                        </Link>
-                    </li>
+                    {/* favorites link removed */}
                     <li className="font-medium text-sm text-dark relative ml-5">
                         <button className="flex items-center" onClick={handleNavClick}>
                             <span className="sr-only">Account</span>
@@ -64,7 +59,7 @@ const Navbar = () => {
                                 <ul className="py-2 text-sm text-dark-200">
                                     <li>
                                         <Link
-                                            to="/dashboard"
+                                            to={isAdmin ? "/admin" : "/dashboard"}
                                             className="block px-4 py-2 hover:bg-gray-100"
                                         >
                         Dashboard
