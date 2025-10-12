@@ -5,12 +5,28 @@ import { v4 as uuid } from "uuid";
 
 const createProduct = (product: Partial<IProduct> & { imagePath: string }, token: string): Promise<IProduct> => {
     const { imagePath, ...productData } = product;
-    return api.post("/products", convertToFormData(productData), {
+    const fd = convertToFormData(productData);
+    // log non-file fields for debugging
+    const debugPayload: Record<string, any> = {};
+    fd.forEach((v, k) => {
+        // avoid instanceof checks in TS build; detect file-like objects by duck-typing
+        const isFileLike = v && typeof (v as any).size === 'number' && typeof (v as any).type === 'string';
+        if (isFileLike) return;
+        debugPayload[k] = v;
+    });
+    // eslint-disable-next-line no-console
+    console.info('[createProduct] POST', api.defaults.baseURL + '/products', debugPayload);
+
+    return api.post("/products", fd, {
         headers: {
             "Content-Type": "multipart/form-data",
             "Authorization": `Bearer ${token}`
         }
-    }).then((response) => response.data);
+    }).then((response) => response.data).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('[createProduct] error', err?.response?.status, err?.response?.data || err.message || err);
+        throw err;
+    });
 };
 
 export const useCreateProductMutation = (token: string) => {

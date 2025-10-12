@@ -1,7 +1,7 @@
 import { useAuth } from "../../../context/AuthContext";
 import { useState } from "react";
 import { useDeleteProductMutation } from "../api/deleteProduct";
-import { Link } from "react-router-dom";
+// Link removed for admin preview
 import { MdEdit } from "react-icons/md";
 import { IoMdTrash } from "react-icons/io";
 import EditProductPopup from "./EditProductPopup";
@@ -11,7 +11,13 @@ export const AdminProductPreview = (props: IProduct) => {
     const [isShowEditProduct, setIsShowEditProduct] = useState(false);
     const deleteMutation = useDeleteProductMutation(token);
 
-    const handleDeleteButtonClick = () => deleteMutation.mutate(props.id);
+    const handleDeleteButtonClick = () => {
+        // English confirmation
+        const confirmed = window.confirm('Are you sure you want to delete this product?');
+        if (confirmed) {
+            deleteMutation.mutate(props.id);
+        }
+    };
     const handleEditButtonClick = () => setIsShowEditProduct(true);
 
     return (
@@ -22,18 +28,29 @@ export const AdminProductPreview = (props: IProduct) => {
                     setIsShowEditProduct={setIsShowEditProduct}
                 />
             )}
-            <Link to={`/products/${props.id}`}>
-                <img
-                    className="w-full h-[200px] sm:h-[250px] rounded-xl object-cover mb-4"
-                    src={props.image as string}
-                    alt="Product image"
-                />
-            </Link>
+            <img
+                className="w-full h-[200px] sm:h-[250px] rounded-xl object-cover mb-4"
+                src={props.image as string}
+                alt="Product image"
+            />
             <div>
                 <h5 className="font-medium text-secondary">
-                    <Link to={`/products/${props.id}`}>{props.name}</Link>
+                    {props.name}
                 </h5>
                 <h5 className="font-semibold mb-2">${props.price}</h5>
+                <div className="text-sm text-gray-600 mb-2">
+                    <div>Created: {new Date(props.createdAt).toLocaleString()}</div>
+                    {typeof props.category === 'object' && props.category && 'name' in props.category ? (
+                        <div>Category: {(props.category as any).name}</div>
+                    ) : (
+                        props.categoryId && <div>Category ID: {props.categoryId}</div>
+                    )}
+                    {props.brand && <div>Brand: {props.brand}</div>}
+                    {props.material && <div>Material: {props.material}</div>}
+                    {(props.weight || props.width || props.height) && (
+                        <div>Dimensions: {props.weight ? `${props.weight}kg ` : ''}{props.width ? `${props.width}x` : ''}{props.height ? `${props.height}cm` : ''}</div>
+                    )}
+                </div>
                 <div className="flex flex-row items-center space-x-2 xs:space-x-0 xs:items-start xs:space-y-2 xs:flex-col">
                     <button
                         id="editProductButton"

@@ -2,7 +2,6 @@ import { useDispatch } from "react-redux";
 import { api } from "../../../app/api";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { AppDispatch } from "../../../app/store";
-import { removeFavorite } from "../favoritesSlice";
 import { removeFromCart } from "../../cart/cartSlice";
 
 const deleteProduct = (productId: string, token: string): Promise<IProduct> => {
@@ -39,7 +38,6 @@ export const useDeleteProductMutation = (token: string) => {
             queryClient.invalidateQueries(["products", "all"]);
         },
         onSuccess: (data: IProduct) => {
-            dispatch(removeFavorite({ id: data.id}));
             dispatch(removeFromCart({ id: data.id }));
         }
     });

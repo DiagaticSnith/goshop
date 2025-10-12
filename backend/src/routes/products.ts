@@ -18,8 +18,23 @@ router.get("/", getAllProducts);
 router.post("/search", searchForProducts);
 router.get("/category/:id", getProductsByCategory);
 router.get("/:id", getProductById);
-router.post("/", authMiddleware, verifyRolesMiddleware(["ADMIN"]), multerUpload.single("image"), processImageUpload, createProduct);
-router.patch("/:id", authMiddleware, verifyRolesMiddleware(["ADMIN"]), multerUpload.single("image"), processImageUpload, updateProduct);
+// accept either `image` or legacy `avatar` file field from frontend
+router.post(
+    "/",
+    authMiddleware,
+    verifyRolesMiddleware(["ADMIN"]),
+    multerUpload.fields([{ name: 'image', maxCount: 1 }, { name: 'avatar', maxCount: 1 }]),
+    processImageUpload,
+    createProduct
+);
+router.patch(
+    "/:id",
+    authMiddleware,
+    verifyRolesMiddleware(["ADMIN"]),
+    multerUpload.fields([{ name: 'image', maxCount: 1 }, { name: 'avatar', maxCount: 1 }]),
+    processImageUpload,
+    updateProduct
+);
 router.delete("/:id", authMiddleware, verifyRolesMiddleware(["ADMIN"]), deleteProduct);
 
 export default router;

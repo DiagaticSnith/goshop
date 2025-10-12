@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -25,7 +25,6 @@ type LoginForm = yup.InferType<typeof loginValidationSchema>;
 
 const LoginForm = () => {
     const { mutateAsync: sessionLogin } = useSessionLoginMutation();
-    const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors }, setValue } = useForm<LoginForm>({
         resolver: yupResolver(loginValidationSchema),
     });

@@ -18,7 +18,7 @@ export const OrderPreview = (props: IOrder) => {
                         <p className="font-semibold">{convertData(props.createdAt)}</p>
                     </div>
                     <div>
-                        <p className="text-secondary">Amount</p>
+                        <p className="text-secondary">Total Price</p>
                         <p className="font-semibold">${props.amount}</p>
                     </div>
                 </div>
@@ -38,33 +38,56 @@ export const OrderPreview = (props: IOrder) => {
                     Product
                                 </th>
                                 <th scope="col" className="px-4 py-7">
-                    Amount
+                    Price
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
-                            {props.items.map((item) => (
-                                <tr
-                                    key={props.id + item}
-                                    className="transition duration-300 ease-in-out hover:bg-neutral-100"
-                                >
-                                    <td className="flex items-center px-4 py-3">
-                                        <img
-                                            src={item.product.image as string}
-                                            alt="Product image"
-                                            className="w-16 h-16 rounded-md object-cover mr-4"
-                                        />
-                                        <p className="font-bold">
-                                            <Link to={`/products/${item.product.id}`}>
-                                                {item.product.name}
-                                            </Link>
-                                        </p>
-                                    </td>
-                                    <td className="text-secondary px-4">
-                      ${(item.product.price * item.quantity).toFixed(2)}
-                                    </td>
-                                </tr>
-                            ))}
+                                    {((props.details && props.details.length > 0)
+                                        ? props.details.map((d) => (
+                                            <tr
+                                                key={`detail-${d.id}`}
+                                                className="transition duration-300 ease-in-out hover:bg-neutral-100"
+                                            >
+                                                <td className="flex items-center px-4 py-3">
+                                                    <img
+                                                        src={d.product.image as string}
+                                                        alt="Product image"
+                                                        className="w-16 h-16 rounded-md object-cover mr-4"
+                                                    />
+                                                    <p className="font-bold">
+                                                        <Link to={`/products/${d.product.id}`}>
+                                                            {d.product.name}
+                                                        </Link>
+                                                    </p>
+                                                </td>
+                                                <td className="text-secondary px-4">
+                              ${(d.product.price * d.totalQuantity).toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))
+                                        : (props.items || []).map((item, idx) => (
+                                            <tr
+                                                key={`item-${idx}`}
+                                                className="transition duration-300 ease-in-out hover:bg-neutral-100"
+                                            >
+                                                <td className="flex items-center px-4 py-3">
+                                                    <img
+                                                        src={item.product.image as string}
+                                                        alt="Product image"
+                                                        className="w-16 h-16 rounded-md object-cover mr-4"
+                                                    />
+                                                    <p className="font-bold">
+                                                        <Link to={`/products/${item.product.id}`}>
+                                                            {item.product.name}
+                                                        </Link>
+                                                    </p>
+                                                </td>
+                                                <td className="text-secondary px-4">
+                              ${(item.product.price * item.quantity).toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        )))}
                         </tbody>
                     </table>
                     <div className="px-4 py-3 border-t-gray-200 border-t">

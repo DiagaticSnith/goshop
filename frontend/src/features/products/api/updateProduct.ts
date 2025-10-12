@@ -3,7 +3,6 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { convertToFormData } from "../../../utils/convertToFormData";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../app/store";
-import { updateFavorite } from "../favoritesSlice";
 import { updateCart } from "../../cart/cartSlice";
 
 const updateProduct = (productId: string, product: Partial<IProduct> & { imagePath: string }, token: string): Promise<IProduct> => {
@@ -47,7 +46,6 @@ export const useUpdateProductMutation = (productId: string, token: string) => {
             queryClient.invalidateQueries(["products", "all"]);
         },
         onSuccess: (data: IProduct) => {
-            dispatch(updateFavorite({ oldId: productId, updatedProduct: data}));
             dispatch(updateCart({ oldProdId: productId, updatedProduct: data }));
         }
     });

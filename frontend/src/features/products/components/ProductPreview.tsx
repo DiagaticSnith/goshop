@@ -1,20 +1,34 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { MdFavoriteBorder, MdFavorite } from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
+ 
+import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../app/store";
-import { addFavorite, removeFavorite, selectFavorites } from "../favoritesSlice";
+import { addToCart, setCart } from "../../cart/cartSlice";
+import { toast } from "react-toastify";
+import { useAuth } from "../../../context/AuthContext";
+import * as cartApi from "../../cart/api";
 
 export const ProductPreview = (props: IProduct) => {
     const dispatch = useDispatch<AppDispatch>();
-    const favorites = useSelector(selectFavorites);
+    const { token } = useAuth();
 
-    const [isFavorite, setIsFavorite] = useState<boolean>(favorites.some(favorite => favorite.id === props.id));
-    const handleFavoriteChange = () => {
-        isFavorite
-            ? dispatch(removeFavorite({ id: props.id }))
-            : dispatch(addFavorite(props));
-        setIsFavorite((prevFavorite) => !prevFavorite);
+    const handleAddToCart = async () => {
+        // Thêm 1 sản phẩm vào giỏ (optimistic)
+        dispatch(addToCart({ product: props, quantity: 1 }));
+
+        if (token) {
+            try {
+                await cartApi.addOrUpdateCartItem(token, props.id, 1);
+                // sync server cart to local state
+                const serverCart = await cartApi.getCart(token);
+                const items = (serverCart.items || []).map((it: any) => ({ product: it.product as IProduct, quantity: it.totalQuantity }));
+                dispatch(setCart(items));
+            } catch (e) {
+                console.error('Failed to sync cart to server', e);
+                toast.error('Unable to save cart to server');
+            }
+        }
+
+        toast.success("Product added to the cart");
     };
 
     return (
@@ -34,22 +48,28 @@ export const ProductPreview = (props: IProduct) => {
                     alt="Product image"
                 />
             </Link>
-            <button
-                className="absolute top-2 right-3 bg-white p-1 rounded-full drop-shadow-custom hidden group-hover:block"
-                onClick={handleFavoriteChange}
-            >
-                {isFavorite ? (
-                    <MdFavorite className="w-6 h-6 animate-fadeIn" />
-                ) : (
-                    <MdFavoriteBorder className="w-6 h-6 animate-fadeIn" />
-                )}
-            </button>
+            {/* favorites button removed */}
             <div className="text-center py-4">
                 <p className="text-secondary mb-1 transition-all hover:underline">
                     <Link to={`/products/${props.id}`}>Detail</Link>
                 </p>
                 <h5 className="font-semibold text-xl mb-1">{props.name}</h5>
                 <h6 className="font-semibold mb-1">${props.price}</h6>
+                <div className="text-sm text-gray-600 mb-1">
+                    {props.brand && <div>Brand: {props.brand}</div>}
+                    {props.material && <div>Material: {props.material}</div>}
+                    {(props.weight || props.width || props.height) && (
+                        <div>Dimensions: {props.weight ? `${props.weight}kg ` : ''}{props.width ? `${props.width}x` : ''}{props.height ? `${props.height}cm` : ''}</div>
+                    )}
+                </div>
+                <div className="mt-3">
+                    <button
+                        onClick={handleAddToCart}
+                        className="text-white rounded-md transition hover:bg-opacity-90 font-semibold text-sm py-2 px-4 bg-primary"
+                    >
+                        Add to cart
+                    </button>
+                </div>
             </div>
         </div>
     );

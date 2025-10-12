@@ -2,7 +2,6 @@ import { useDispatch } from "react-redux";
 import { api } from "../../../app/api";
 import { useQuery } from "@tanstack/react-query";
 import { AppDispatch } from "../../../app/store";
-import { removeFavorite } from "../favoritesSlice";
 import { removeFromCart } from "../../cart/cartSlice";
 
 const getSingleProduct = (productId: string): Promise<IProduct> => {
@@ -16,7 +15,6 @@ export const useGetSingleProductQuery = (productId: string) => {
         queryKey: ["products", productId],
         queryFn: () => getSingleProduct(productId),
         onError: () => {
-            dispatch(removeFavorite({ id: productId }));
             dispatch(removeFromCart({ id: productId }));
         }
     });

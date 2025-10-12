@@ -1,16 +1,11 @@
-import { CaterogyBox } from "../components/CaterogyBox";
+// imports cleaned: CaterogyBox and unused category images removed
 import Showcase from "../components/Showcase";
 import Footer from "../components/Footer";
-import categoryElectronics from "../../../assets/images/Home/categoryElectronics.webp";
-import categoryFashion from "../../../assets/images/Home/categoryFashion.webp";
-import categoryHome from "../../../assets/images/Home/categoryHome.webp";
-import categoryFurniture from "../../../assets/images/Home/categoryFurniture.webp";
-import categoryBooks from "../../../assets/images/Home/categoryBooks.webp";
 import starter1 from "../../../assets/images/Home/starter1.webp";
 import starter2 from "../../../assets/images/Home/starter2.webp";
 import starter3 from "../../../assets/images/Home/starter3.webp";
 import starter4 from "../../../assets/images/Home/starter4.webp";
-import { FaArrowRightLong } from "react-icons/fa6";
+// FaArrowRightLong unused
 import { HiGift } from "react-icons/hi";
 import { Link } from "react-router-dom";
 

@@ -45,6 +45,11 @@ const seedProducts = () => __awaiter(void 0, void 0, void 0, function* () {
                 description: product.description,
                 price: Number(product.price),
                 stockQuantity: Math.floor(Math.random() * 100),
+                weight: Number((Math.random() * 5).toFixed(2)),
+                width: Number((Math.random() * 50).toFixed(2)),
+                height: Number((Math.random() * 50).toFixed(2)),
+                brand: "FalsoBrand",
+                material: "Plastic",
                 priceId: stripeProduct.default_price,
                 image: product.image,
                 category: {

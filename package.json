@@ -1,6 +1,6 @@
 {
-  "name": "fastfood-delivery",
-  "description": "Fastfood Delivery - Ứng dụng đặt món ăn nhanh trực tuyến.",
+  "name": "Goshop",
+  "description": "Goshop - Cửa hàng nội thất trực tuyến.",
   "scripts": {
     "build": "tsc",
     "postbuild": "copy src\\config\\serviceAccountKey.json dist\\config\\serviceAccountKey.json",

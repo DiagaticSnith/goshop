@@ -22,7 +22,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.multerUpload = void 0;
 const multer_1 = __importStar(require("multer"));
-exports.multerUpload = (0, multer_1.default)({ storage: (0, multer_1.diskStorage)({}) });
+const os_1 = __importDefault(require("os"));
+const storage = (0, multer_1.diskStorage)({
+    destination: (req, file, cb) => {
+        cb(null, os_1.default.tmpdir());
+    },
+    filename: (req, file, cb) => {
+        const filename = `${Date.now()}-${file.originalname}`.replace(/\s+/g, "_");
+        cb(null, filename);
+    }
+});
+exports.multerUpload = (0, multer_1.default)({ storage });

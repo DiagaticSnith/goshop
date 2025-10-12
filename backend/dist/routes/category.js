@@ -2,7 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const category_1 = require("../controllers/category");
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const verifyRolesMiddleware_1 = require("../middleware/verifyRolesMiddleware");
 const router = (0, express_1.Router)();
 router.get("/", category_1.getAllCategories);
 router.get("/:id", category_1.getSingleCategory);
+router.post("/", authMiddleware_1.authMiddleware, (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), category_1.createCategory);
+router.patch("/:id", authMiddleware_1.authMiddleware, (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), category_1.updateCategory);
+router.delete("/:id", authMiddleware_1.authMiddleware, (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), category_1.deleteCategory);
 exports.default = router;
