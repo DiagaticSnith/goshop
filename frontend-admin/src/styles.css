@@ -1,0 +1,24 @@
+/* Minimal styles copied from main frontend to keep the admin UI usable
+   (replaced Tailwind directives with plain CSS so nginx-served build shows styles)
+*/
+:root{
+  --bg: #f3f4f6; /* bg-main-gray */
+  --text: #1f2937; /* dark */
+  --secondary: #2563eb;
+}
+*{box-sizing:border-box}
+body{font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:var(--bg); color:var(--text); margin:0;}
+.container{width:100%; max-width:90%; padding:1rem 1.5rem; margin:0 auto}
+h1{font-size:1.75rem; margin-top:1rem}
+.p-4{padding:1rem}
+.mt-4{margin-top:1rem}
+.mb-4{margin-bottom:1rem}
+.bg-white{background:#fff}
+.drop-shadow-custom{box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.rounded-md{border-radius:8px}
+.border{border:1px solid #e5e7eb}
+.p-3{padding:0.75rem}
+.btn{background:var(--secondary); color:#fff; padding:0.5rem 0.75rem; border-radius:6px; border:none}
+label{display:block; font-weight:600}
+input{padding:0.35rem; border:1px solid #cbd5e1}
+

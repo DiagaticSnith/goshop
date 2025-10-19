@@ -34,6 +34,10 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         if (!user || !user.role) {
             return res.status(401).json({ message: "Unauthorized: No user or role found" });
         }
+        // Block hidden users from accessing any protected endpoint
+        if (user.status === 'HIDDEN') {
+            return res.status(403).json({ message: 'Account is locked' });
+        }
         req.role = user.role;
         next();
     }

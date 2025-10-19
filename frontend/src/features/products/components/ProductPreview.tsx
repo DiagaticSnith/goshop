@@ -6,6 +6,7 @@ import { addToCart, setCart } from "../../cart/cartSlice";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 import * as cartApi from "../../cart/api";
+import { toImageUrl } from "../../../utils/imageUrl";
 
 export const ProductPreview = (props: IProduct) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -44,7 +45,7 @@ export const ProductPreview = (props: IProduct) => {
             >
                 <img
                     className="w-full h-[250px] sm:h-[300px] rounded-xl object-cover"
-                    src={props.image as string}
+                    src={toImageUrl(props.image as string)}
                     alt="Product image"
                 />
             </Link>

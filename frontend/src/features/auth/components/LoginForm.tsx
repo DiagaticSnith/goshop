@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -30,6 +30,7 @@ const LoginForm = () => {
     });
 
     const { signIn, signInWithGoogle } = useAuth();
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const handleLogin = async (data: LoginForm) => {
         try {
@@ -45,8 +46,16 @@ const LoginForm = () => {
                 // clear any previous cart to avoid mixing carts between users
                 try { localStorage.removeItem("cart"); } catch(e) {}
                 localStorage.setItem("userInfo", JSON.stringify(userInfo));
-                // full reload so app picks up new userInfo and rehydrates state
-                window.location.href = "/";
+                // debug: ensure userInfo is stored before navigation
+                // eslint-disable-next-line no-console
+                console.log('sessionLogin -> stored userInfo', userInfo);
+                // Điều hướng: admin vào /admin (force reload), user về homepage
+                if (userInfo?.role === "ADMIN") {
+                    // Force a full reload to avoid any role timing issues
+                    window.location.assign("/admin");
+                } else {
+                    navigate("/", { replace: true });
+                }
             }
         } catch (error) {
             toast.error("Invalid email or password");
@@ -67,7 +76,9 @@ const LoginForm = () => {
             };
             registerWithGoogle(credentials);
             try { localStorage.removeItem("cart"); } catch(e) {}
-            window.location.href = "/";
+            // Sau khi Google login, sẽ cần /auth/session-login nếu muốn lấy role.
+            // Tạm thời quay lại home; nếu đã có isAdmin trong localStorage có thể điều hướng tương tự.
+            navigate("/", { replace: true });
         }
     };
 

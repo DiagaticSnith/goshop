@@ -3,5 +3,6 @@ interface IUser {
     email: string;
     fullName: string;
     role: "USER" | "ADMIN";
+    status?: "ACTIVE" | "HIDDEN";
     avatar?: string | Blob;
 }

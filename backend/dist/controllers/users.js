@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserByFirebaseId = exports.deleteUser = exports.updateUser = exports.createUser = void 0;
+exports.updateUserRole = exports.toggleUserStatus = exports.listUsers = exports.getUserByFirebaseId = exports.deleteUser = exports.updateUser = exports.createUser = void 0;
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 const firebase_1 = require("../config/firebase");
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -42,6 +42,12 @@ exports.createUser = createUser;
 const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.params.id;
+        // security: only owner or ADMIN can update
+        const requesterId = req.uid;
+        const requesterRole = req.role;
+        if (requesterId !== userId && requesterRole !== 'ADMIN') {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
         const foundUser = yield prisma_client_1.default.user.findUnique({
             where: {
                 firebaseId: userId
@@ -50,27 +56,27 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         if (!foundUser) {
             return res.status(404).json({ message: "User not found" });
         }
-        if (req.body.email && req.body.email !== foundUser.email) {
-            const existingUser = yield prisma_client_1.default.user.findUnique({
-                where: {
-                    email: req.body.email
-                }
-            });
-            if (existingUser) {
-                return res.status(400).json({ message: "User with given email already exists" });
-            }
-        }
+        // Compose fullName from firstName/lastName if provided (admin UI), otherwise fallback to provided fullName
+        const firstName = (req.body.firstName || "").toString().trim();
+        const lastName = (req.body.lastName || "").toString().trim();
+        const fullNameFromNames = `${firstName} ${lastName}`.trim();
+        const newFullName = fullNameFromNames || (req.body.fullName || foundUser.fullName);
+        // Always ignore email updates via this endpoint for safety
+        // Admin UI should not change email; if email provided, discard.
         const image = req.image || req.body.avatar;
         const updatedUser = yield prisma_client_1.default.user.update({
             where: {
                 firebaseId: userId
             },
-            data: Object.assign(Object.assign({}, req.body), { avatar: image })
+            data: {
+                fullName: newFullName,
+                avatar: image || foundUser.avatar
+            }
         });
+        // Update Firebase displayName/photo only (do not modify email here)
         yield firebase_1.auth.updateUser(userId || "", {
-            email: req.body.email,
-            displayName: req.body.fullName,
-            photoURL: image
+            displayName: newFullName,
+            photoURL: image || undefined
         });
         const token = yield firebase_1.auth.createCustomToken(userId);
         res.status(200).json({ user: updatedUser, token });
@@ -82,15 +88,15 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 exports.updateUser = updateUser;
 const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const foundUser = yield prisma_client_1.default.user.delete({
-            where: {
-                firebaseId: req.params.id
-            }
+        // Soft delete: set status to HIDDEN instead of removing (keep FKs intact)
+        const updated = yield prisma_client_1.default.user.update({
+            where: { firebaseId: req.params.id },
+            data: { status: "HIDDEN" }
         });
-        if (!foundUser) {
+        if (!updated) {
             return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json({ message: "User deleted" });
+        res.status(200).json({ message: "User hidden" });
     }
     catch (error) {
         next({ message: "Unable to delete the user", error });
@@ -109,3 +115,60 @@ const getUserByFirebaseId = (req, res) => __awaiter(void 0, void 0, void 0, func
     res.status(200).json(foundUser);
 });
 exports.getUserByFirebaseId = getUserByFirebaseId;
+// Admin: list users with filters (includeHidden=true to include HIDDEN)
+const listUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { q, includeHidden } = req.query;
+        const where = {};
+        if (q) {
+            where.OR = [
+                { email: { contains: q, mode: "insensitive" } },
+                { fullName: { contains: q, mode: "insensitive" } }
+            ];
+        }
+        if (!includeHidden) {
+            where.status = "ACTIVE";
+        }
+        const users = yield prisma_client_1.default.user.findMany({ where, orderBy: { fullName: "asc" } });
+        res.json(users);
+    }
+    catch (error) {
+        next({ message: "Unable to fetch users", error });
+    }
+});
+exports.listUsers = listUsers;
+// Admin: toggle status ACTIVE <-> HIDDEN
+const toggleUserStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params; // firebaseId
+        const user = yield prisma_client_1.default.user.findUnique({ where: { firebaseId: id } });
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        if (user.role === 'ADMIN') {
+            return res.status(400).json({ message: "Cannot lock/unlock an admin account" });
+        }
+        const nextStatus = user.status === "ACTIVE" ? "HIDDEN" : "ACTIVE";
+        const updated = yield prisma_client_1.default.user.update({ where: { firebaseId: id }, data: { status: nextStatus } });
+        res.json(updated);
+    }
+    catch (error) {
+        next({ message: "Unable to toggle user status", error });
+    }
+});
+exports.toggleUserStatus = toggleUserStatus;
+// Admin: update role (USER/ADMIN)
+const updateUserRole = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params; // firebaseId
+        const { role } = req.body;
+        if (!role || (role !== "USER" && role !== "ADMIN")) {
+            return res.status(400).json({ message: "Invalid role" });
+        }
+        const updated = yield prisma_client_1.default.user.update({ where: { firebaseId: id }, data: { role } });
+        res.json(updated);
+    }
+    catch (error) {
+        next({ message: "Unable to update user role", error });
+    }
+});
+exports.updateUserRole = updateUserRole;

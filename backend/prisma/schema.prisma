@@ -13,6 +13,7 @@ model User {
   email      String  @unique @db.VarChar(255)
   fullName   String
   role       Role    @default(USER)
+  status     UserStatus @default(ACTIVE)
   avatar     String?
   Order      Order[]
   // A user can have one cart (optional)
@@ -22,6 +23,11 @@ model User {
 enum Role {
   USER
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  HIDDEN
 }
 
 model Product {
@@ -36,6 +42,7 @@ model Product {
   brand         String?
   material      String?
   image         String
+  status        ProductStatus @default(ACTIVE)
   category      Category? @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
   categoryId    Int?
   priceId       String    @unique
@@ -47,6 +54,11 @@ model Product {
 
   @@fulltext([name])
   @@fulltext([name, description])
+}
+
+enum ProductStatus {
+  ACTIVE
+  HIDDEN
 }
 
 model Category {

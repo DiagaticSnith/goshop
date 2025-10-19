@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductsByCategory = exports.searchForProducts = exports.getProductById = exports.getAllProducts = void 0;
+exports.getInventoryStats = exports.setProductStatus = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductsByCategory = exports.searchForProducts = exports.getProductById = exports.getAllProducts = void 0;
 const stripe_1 = __importDefault(require("../config/stripe"));
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 // Return true if value is an absolute http/https URL
@@ -21,6 +21,7 @@ const isUrl = (val) => {
 };
 const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const products = yield prisma_client_1.default.product.findMany({
+        where: { status: 'ACTIVE' },
         include: {
             category: true
         },
@@ -35,13 +36,9 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.getAllProducts = getAllProducts;
 const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const product = yield prisma_client_1.default.product.findUnique({
-        where: {
-            id: req.params.id
-        },
-        include: {
-            category: true
-        }
+    const product = yield prisma_client_1.default.product.findFirst({
+        where: { id: req.params.id, status: 'ACTIVE' },
+        include: { category: true }
     });
     if (!product) {
         return res.status(404).json({ message: "Product not found" });
@@ -57,12 +54,9 @@ const searchForProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         }
         const products = yield prisma_client_1.default.product.findMany({
             where: {
-                name: {
-                    search: searchQuery
-                },
-                description: {
-                    search: searchQuery
-                }
+                status: 'ACTIVE',
+                name: { search: searchQuery },
+                description: { search: searchQuery }
             },
             orderBy: {
                 _relevance: {
@@ -85,7 +79,8 @@ exports.searchForProducts = searchForProducts;
 const getProductsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const products = yield prisma_client_1.default.product.findMany({
         where: {
-            categoryId: Number(req.params.id)
+            categoryId: Number(req.params.id),
+            status: 'ACTIVE'
         },
         orderBy: {
             createdAt: "desc"
@@ -122,6 +117,7 @@ const createProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 image: imageForDb,
                 name: req.body.name,
                 description: req.body.description,
+                status: 'ACTIVE',
                 weight: req.body.weight ? Number(req.body.weight) : undefined,
                 width: req.body.width ? Number(req.body.width) : undefined,
                 height: req.body.height ? Number(req.body.height) : undefined,
@@ -227,23 +223,69 @@ const updateProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 exports.updateProduct = updateProduct;
 const deleteProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const deletedProduct = yield prisma_client_1.default.product.delete({
-            where: {
-                id: req.params.id
-            }
+        const existing = yield prisma_client_1.default.product.findUnique({ where: { id: req.params.id } });
+        if (!existing)
+            return res.status(404).json({ message: 'Product not found' });
+        const updated = yield prisma_client_1.default.product.update({
+            where: { id: req.params.id },
+            data: { status: 'HIDDEN' }
         });
-        if (!deletedProduct) {
-            return res.status(404).json({ message: "Product not found" });
+        // Keep Stripe product inactive
+        try {
+            yield stripe_1.default.products.update(req.params.id, { active: false });
         }
-        // Do NOT auto-delete categories when a product is deleted.
-        // Categories should be managed explicitly via the categories management UI.
-        yield stripe_1.default.products.update(req.params.id, {
-            active: false
-        });
-        res.status(200).json(deletedProduct);
+        catch (_e) { }
+        res.status(200).json(updated);
     }
     catch (error) {
         next({ message: "Unable to delete the product", error });
     }
 });
 exports.deleteProduct = deleteProduct;
+// Admin: set product status (ACTIVE/HIDDEN)
+const setProductStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { status } = req.body;
+        if (!status || (status !== 'ACTIVE' && status !== 'HIDDEN')) {
+            return res.status(400).json({ message: 'Invalid status. Use ACTIVE or HIDDEN.' });
+        }
+        const existing = yield prisma_client_1.default.product.findUnique({ where: { id: req.params.id } });
+        if (!existing)
+            return res.status(404).json({ message: 'Product not found' });
+        const updated = yield prisma_client_1.default.product.update({ where: { id: req.params.id }, data: { status: status } });
+        try {
+            // Keep Stripe product inactive when hidden; do nothing when active
+            if (status === 'HIDDEN') {
+                yield stripe_1.default.products.update(req.params.id, { active: false });
+            }
+        }
+        catch (_f) { }
+        res.status(200).json(updated);
+    }
+    catch (error) {
+        next({ message: 'Unable to set product status', error });
+    }
+});
+exports.setProductStatus = setProductStatus;
+// Admin: inventory statistics (counts and stock summary)
+const getInventoryStats = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const [productsCount, outOfStockCount, lowStockCount, stockAggregate] = yield Promise.all([
+            prisma_client_1.default.product.count({ where: { status: 'ACTIVE' } }),
+            prisma_client_1.default.product.count({ where: { stockQuantity: 0, status: 'ACTIVE' } }),
+            prisma_client_1.default.product.count({ where: { stockQuantity: { lte: 5 }, status: 'ACTIVE' } }),
+            prisma_client_1.default.product.aggregate({ _sum: { stockQuantity: true }, where: { status: 'ACTIVE' } })
+        ]);
+        const totalStock = stockAggregate._sum.stockQuantity || 0;
+        return res.status(200).json({
+            productsCount,
+            totalStock,
+            outOfStockCount,
+            lowStockCount
+        });
+    }
+    catch (error) {
+        next({ message: "Unable to compute inventory stats", error });
+    }
+});
+exports.getInventoryStats = getInventoryStats;

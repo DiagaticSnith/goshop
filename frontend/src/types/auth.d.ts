@@ -1,5 +1,8 @@
 interface IAuth {
-    token: string;
+    token?: string;
+    email?: string;
+    fullName?: string;
+    role?: "USER" | "ADMIN";
 }
 
 interface ILoginCredentials {

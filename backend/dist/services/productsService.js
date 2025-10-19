@@ -18,7 +18,7 @@ const stripe_1 = __importDefault(require("../config/stripe"));
 exports.ProductsService = {
     getAllProducts() {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_client_1.default.product.findMany({ orderBy: { createdAt: 'desc' } });
+            return prisma_client_1.default.product.findMany({ where: { status: 'ACTIVE' }, orderBy: { createdAt: 'desc' } });
         });
     },
     getProductById(id) {
@@ -33,6 +33,7 @@ exports.ProductsService = {
             }
             return prisma_client_1.default.product.findMany({
                 where: {
+                    status: 'ACTIVE',
                     name: { search: searchQuery },
                     description: { search: searchQuery }
                 },
@@ -49,7 +50,7 @@ exports.ProductsService = {
     getProductsByCategory(categoryId) {
         return __awaiter(this, void 0, void 0, function* () {
             return prisma_client_1.default.product.findMany({
-                where: { categoryId },
+                where: { categoryId, status: 'ACTIVE' },
                 orderBy: { createdAt: 'desc' }
             });
         });
@@ -74,6 +75,7 @@ exports.ProductsService = {
                     image,
                     name: body.name,
                     description: body.description,
+                    status: 'ACTIVE',
                     category: {
                         connectOrCreate: {
                             where: { name: body.category },
@@ -122,14 +124,15 @@ exports.ProductsService = {
     },
     deleteProduct(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const deletedProduct = yield prisma_client_1.default.product.delete({ where: { id } });
-            if (!deletedProduct)
+            const existing = yield prisma_client_1.default.product.findUnique({ where: { id } });
+            if (!existing)
                 return null;
-            yield prisma_client_1.default.category.deleteMany({
-                where: { products: { none: {} } }
-            });
-            yield stripe_1.default.products.update(id, { active: false });
-            return deletedProduct;
+            const updated = yield prisma_client_1.default.product.update({ where: { id }, data: { status: 'HIDDEN' } });
+            try {
+                yield stripe_1.default.products.update(id, { active: false });
+            }
+            catch (_a) { }
+            return updated;
         });
     }
 };

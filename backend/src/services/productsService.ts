@@ -4,7 +4,7 @@ import stripe from '../config/stripe';
 
 export const ProductsService = {
   async getAllProducts() {
-    return prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
+    return prisma.product.findMany({ where: { status: 'ACTIVE' as any }, orderBy: { createdAt: 'desc' } });
   },
 
   async getProductById(id: string) {
@@ -17,6 +17,7 @@ export const ProductsService = {
     }
     return prisma.product.findMany({
       where: {
+        status: 'ACTIVE' as any,
         name: { search: searchQuery },
         description: { search: searchQuery }
       },
@@ -32,7 +33,7 @@ export const ProductsService = {
 
   async getProductsByCategory(categoryId: number) {
     return prisma.product.findMany({
-      where: { categoryId },
+      where: { categoryId, status: 'ACTIVE' as any },
       orderBy: { createdAt: 'desc' }
     });
   },
@@ -56,6 +57,7 @@ export const ProductsService = {
         image,
         name: body.name,
         description: body.description,
+        status: 'ACTIVE' as any,
         category: {
           connectOrCreate: {
             where: { name: body.category },
@@ -101,12 +103,10 @@ export const ProductsService = {
   },
 
   async deleteProduct(id: string) {
-    const deletedProduct = await prisma.product.delete({ where: { id } });
-    if (!deletedProduct) return null;
-    await prisma.category.deleteMany({
-      where: { products: { none: {} } }
-    });
-    await stripe.products.update(id, { active: false });
-    return deletedProduct;
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) return null;
+    const updated = await prisma.product.update({ where: { id }, data: { status: 'HIDDEN' as any } });
+    try { await stripe.products.update(id, { active: false }); } catch {}
+    return updated;
   }
 };
