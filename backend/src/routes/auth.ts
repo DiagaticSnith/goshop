@@ -2,6 +2,7 @@ import { Router } from "express";
 import { register, registerWithGoogle } from "../controllers/auth";
 import prisma from "../config/prisma-client";
 import { auth } from "../config/firebase";
+import { authMiddleware } from "../middleware/authMiddleware";
 const router = Router();
 
 router.post("/session-login", async (req, res) => {
@@ -17,6 +18,9 @@ router.post("/session-login", async (req, res) => {
             console.log("User not found in DB for UID:", decoded.uid); // Thêm log này
             return res.status(404).json({ message: "User not found" });
         }
+        if ((user as any).status === 'HIDDEN') {
+            return res.status(403).json({ message: 'Account is locked' });
+        }
         console.log("[LOGIN] User role:", user.role, "email:", user.email);
         return res.json({
             email: user.email,
@@ -31,5 +35,17 @@ router.post("/session-login", async (req, res) => {
 
 router.post("/register/google", registerWithGoogle);
 router.post("/register", register);
+
+// Verify current session and return minimal user info
+router.get("/me", authMiddleware, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({ where: { firebaseId: req.uid } });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        // If hidden, authMiddleware would have already blocked with 403
+        return res.json({ email: user.email, role: user.role, fullName: user.fullName, status: (user as any).status });
+    } catch (e) {
+        return res.status(500).json({ message: "Unable to load session" });
+    }
+});
 
 export default router;

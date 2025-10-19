@@ -16,6 +16,7 @@ const express_1 = require("express");
 const auth_1 = require("../controllers/auth");
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 const firebase_1 = require("../config/firebase");
+const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
 router.post("/session-login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idToken } = req.body;
@@ -29,6 +30,9 @@ router.post("/session-login", (req, res) => __awaiter(void 0, void 0, void 0, fu
         if (!user) {
             console.log("User not found in DB for UID:", decoded.uid); // Thêm log này
             return res.status(404).json({ message: "User not found" });
+        }
+        if (user.status === 'HIDDEN') {
+            return res.status(403).json({ message: 'Account is locked' });
         }
         console.log("[LOGIN] User role:", user.role, "email:", user.email);
         return res.json({
@@ -44,4 +48,17 @@ router.post("/session-login", (req, res) => __awaiter(void 0, void 0, void 0, fu
 }));
 router.post("/register/google", auth_1.registerWithGoogle);
 router.post("/register", auth_1.register);
+// Verify current session and return minimal user info
+router.get("/me", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield prisma_client_1.default.user.findUnique({ where: { firebaseId: req.uid } });
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        // If hidden, authMiddleware would have already blocked with 403
+        return res.json({ email: user.email, role: user.role, fullName: user.fullName, status: user.status });
+    }
+    catch (e) {
+        return res.status(500).json({ message: "Unable to load session" });
+    }
+}));
 exports.default = router;

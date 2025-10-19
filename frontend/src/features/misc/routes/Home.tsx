@@ -1,4 +1,4 @@
-// imports cleaned: CaterogyBox and unused category images removed
+// imports cleaned: CategoryBox and unused category images removed
 import Showcase from "../components/Showcase";
 import Footer from "../components/Footer";
 import starter1 from "../../../assets/images/Home/starter1.webp";

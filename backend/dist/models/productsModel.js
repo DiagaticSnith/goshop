@@ -17,17 +17,17 @@ const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 exports.ProductsModel = {
     getAllProducts() {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_client_1.default.product.findMany();
+            return prisma_client_1.default.product.findMany({ where: { status: 'ACTIVE' } });
         });
     },
     getProductById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_client_1.default.product.findUnique({ where: { id } });
+            return prisma_client_1.default.product.findFirst({ where: { id, status: 'ACTIVE' } });
         });
     },
     createProduct(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_client_1.default.product.create({ data });
+            return prisma_client_1.default.product.create({ data: Object.assign(Object.assign({}, data), { status: 'ACTIVE' }) });
         });
     },
     updateProduct(id, data) {
@@ -37,7 +37,7 @@ exports.ProductsModel = {
     },
     deleteProduct(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_client_1.default.product.delete({ where: { id } });
+            return prisma_client_1.default.product.update({ where: { id }, data: { status: 'HIDDEN' } });
         });
     },
 };

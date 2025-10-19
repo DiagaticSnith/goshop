@@ -13,6 +13,7 @@ import { FcCheckmark } from "react-icons/fc";
 import { RxCross1 } from "react-icons/rx";
 import { Spinner } from "../../../components/Elements/Spinner";
 import { toast } from "react-toastify";
+import { toImageUrl } from "../../../utils/imageUrl";
 
 const Product = () => {
     const { productId } = useParams();
@@ -62,7 +63,7 @@ const Product = () => {
             <div className="flex flex-col xs:flex-row">
                 <img
                     className="w-full xs:w-1/2 h-[400px] sm:h-[500px] rounded-xl mb-8 xs:mb-0 xs:mr-4 sm:mr-8 object-cover"
-                    src={product.image as string}
+                    src={toImageUrl(product.image as string)}
                     alt="Product image"
                 />
                 <div>

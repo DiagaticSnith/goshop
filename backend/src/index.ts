@@ -17,8 +17,22 @@ import { v2 as cloudinary } from "cloudinary";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Build allowed origins from environment or default dev hosts
+const defaultAllowed = ["http://localhost:5173", "http://localhost:4173"];
+const devAdminHosts = ["http://localhost:5174", "http://host.docker.internal:5174"];
+const envAllowed = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",").map(s => s.trim()).filter(Boolean) : [];
+const allowedOrigins = Array.from(new Set([...defaultAllowed, ...devAdminHosts, ...envAllowed, process.env.FRONTEND_URL || ""])).filter(Boolean);
+
 const corsOptions = {
-    origin: ["http://localhost:5173", "http://localhost:4173", process.env.FRONTEND_URL || ""]
+    origin: function (origin: any, callback: any) {
+        // allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
 };
 app.use(cors(corsOptions));
 cloudinary.config({

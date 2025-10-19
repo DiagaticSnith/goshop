@@ -14,6 +14,7 @@ interface IAuthContext {
     currentUser: User | null;
     isAdmin: boolean | undefined;
     token: string;
+    isLoading: boolean;
     signIn: (email: string, password: string) => Promise<UserCredential> | null;
     signInWithToken: (token: string) => Promise<UserCredential> | null;
     signInWithGoogle: () => Promise<UserCredential> | null;
@@ -26,6 +27,7 @@ const AuthContext = createContext<IAuthContext>({
     currentUser: null,
     token: "",
     isAdmin: undefined,
+    isLoading: true,
     signIn: () => null,
     signInWithToken: () => null,
     signInWithGoogle: () => null,
@@ -52,17 +54,27 @@ export const AuthProvider = ({ children }: Props) => {
             setCurrentUser(user);
             const decoded = await user.getIdTokenResult();
             setToken(decoded.token);
-            // Lấy role từ backend nếu có
-            const userInfo = localStorage.getItem("userInfo");
-            if (userInfo) {
-                try {
-                    const parsed = JSON.parse(userInfo);
-                    setIsAdmin(parsed.role === "ADMIN");
-                } catch {
+            // Xác định role: ưu tiên custom claims trên Firebase, fallback localStorage
+            try {
+                const claimRole = (decoded.claims as any)?.role;
+                if (claimRole === "ADMIN") {
+                    setIsAdmin(true);
+                } else if (claimRole === "USER") {
                     setIsAdmin(false);
+                } else {
+                    // Chưa có claim: thử lấy từ localStorage nếu đã có session-login
+                    const userInfo = localStorage.getItem("userInfo");
+                    if (userInfo) {
+                        const parsed = JSON.parse(userInfo);
+                        setIsAdmin(parsed.role === "ADMIN");
+                    } else {
+                        // Chưa biết, để undefined để UI chờ thay vì deny sớm
+                        setIsAdmin(undefined);
+                    }
                 }
-            } else {
-                setIsAdmin(false);
+            } catch {
+                // Nếu lỗi khi decode claim, giữ undefined để UI chờ
+                setIsAdmin(undefined);
             }
             // fetch server cart and sync to redux
             try {
@@ -80,6 +92,19 @@ export const AuthProvider = ({ children }: Props) => {
         }
         setIsLoading(false);
     };
+
+    // Sau khi token cập nhật (đăng nhập xong), kiểm tra lại localStorage để tránh race-condition
+    useEffect(() => {
+        if (!token) return;
+        try {
+            const userInfo = localStorage.getItem("userInfo");
+            if (userInfo) {
+                const parsed = JSON.parse(userInfo);
+                setIsAdmin(parsed?.role === "ADMIN");
+            }
+        } catch {}
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token]);
 
     const signIn = async (email: string, password: string) => {
         return await signInWithEmailAndPassword(auth, email, password);
@@ -105,6 +130,9 @@ export const AuthProvider = ({ children }: Props) => {
         // reset redux cart state
         dispatch(clearCart());
 
+        if (!token) {
+            throw new Error("Missing custom token from register response");
+        }
         return await signInWithToken(token);
     };
 
@@ -127,6 +155,7 @@ export const AuthProvider = ({ children }: Props) => {
         currentUser,
         isAdmin,
         token,
+        isLoading,
         signIn,
         signInWithToken,
         signInWithGoogle,

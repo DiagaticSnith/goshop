@@ -58,12 +58,18 @@ const Navbar = () => {
                                 }
                                 <ul className="py-2 text-sm text-dark-200">
                                     <li>
-                                        <Link
-                                            to={isAdmin ? "/admin" : "/dashboard"}
-                                            className="block px-4 py-2 hover:bg-gray-100"
+                                        <button
+                                            onClick={() => {
+                                                if (isAdmin) {
+                                                    window.location.assign('/admin');
+                                                } else {
+                                                    window.location.assign('/dashboard');
+                                                }
+                                            }}
+                                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                                         >
-                        Dashboard
-                                        </Link>
+                                            Dashboard
+                                        </button>
                                     </li>
                                 </ul>
                                         <div className="py-2">

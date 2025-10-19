@@ -11,6 +11,7 @@ export const AppRoutes = () => {
     return (
         <Routes>
             <Route path="/">
+                {/* Home remains default for users */}
                 <Route index element={<Home />} />
                 <Route path="auth/*" element={<AuthRoutes />} />
                 <Route path="cart/*" element={<CartRoutes />} />

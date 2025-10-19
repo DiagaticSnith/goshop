@@ -1,4 +1,3 @@
-
 # Goshop
 
 Ứng dụng web đặt nội thất nhanh trực tuyến, xây dựng với React, Node.js, Express, MySQL (Prisma), và Stripe. Người dùng có thể duyệt thực đơn, thêm sản phẩm vào giỏ hàng, và đặt món. Quản trị viên có thể quản lý thực đơn và đơn hàng.
@@ -76,3 +75,73 @@ https://github.com/ke444a/ecommerce-goshop/assets/81090139/3dc1cb1f-b47d-4177-b8
 -   ![React Query](https://img.shields.io/badge/-React%20Query-FF4154?style=for-the-badge&logo=react%20query&logoColor=white)
 -   ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-0088CC?style=for-the-badge&logo=react-hook-form&logoColor=white)
 -   ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+
+## Hướng dẫn cài đặt nhanh
+
+Những bước tối thiểu để khởi chạy project cục bộ (mô tả ngắn, dùng PowerShell trên Windows):
+
+1. Pull/clone về rồi vào thư mục project
+
+```powershell
+git clone <your-repo-url>
+cd goshop
+```
+
+Hoặc nếu đã clone trước đó:
+
+```powershell
+git pull origin main
+```
+
+2. Chỉnh cấu hình
+
+- Mở `docker-compose.yml` và điều chỉnh các cấu hình service (port, volume, tên container) cho phù hợp với môi trường của bạn.
+- Chỉnh các file `.env` (ở `backend/`, `frontend/`, `frontend-admin/` nếu có): khai báo thông tin Firebase (UID/service account), Stripe keys, Cloudinary, MySQL password, v.v.
+
+3. Khởi động Docker
+
+```powershell
+docker-compose up --build
+```
+
+4. Đẩy schema Prisma vào database
+
+Sau khi backend container đã khởi động, chạy:
+
+```powershell
+docker-compose exec backend sh -c "npx prisma db push --accept-data-loss"
+```
+
+5. Import dữ liệu từ `data.sql`
+
+File `data.sql` nằm ở gốc repo (`./data.sql`). Có hai cách import:
+
+- Tùy chọn A — dùng shell MySQL trong container (thủ công):
+
+```powershell
+docker-compose exec db sh -c "mysql -uroot -p123123"
+# trong mysql prompt:  -- chạy các lệnh sau
+USE goshop;
+# rồi copy-n-paste nội dung của file data.sql vào và chạy
+```
+
+- Tùy chọn B — import trực tiếp từ host (khuyên dùng khi file data.sql ở host):
+
+```powershell
+docker exec -i $(docker-compose ps -q db) mysql -uroot -p123123 goshop < ./data.sql
+```
+
+Lưu ý: nếu container database dùng password khác, thay `123123` bằng mật khẩu tương ứng. Nếu container DB không có file `data.sql`, dùng Tùy chọn B để gửi file từ host vào DB.
+
+6. Kiểm tra
+
+- Sau khi import, truy cập backend và frontend theo cấu hình `docker-compose` (thường là http://localhost:3000 cho backend và http://localhost:5173 cho frontend tùy cấu hình).
+
+Nếu gặp lỗi, kiểm tra logs:
+
+```powershell
+docker-compose logs -f backend
+docker-compose logs -f db
+```
+
+---
