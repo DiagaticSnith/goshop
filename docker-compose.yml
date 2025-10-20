@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: mysql:8.0
@@ -10,7 +8,8 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -P 3306 -uroot -p\"$MYSQL_ROOT_PASSWORD\""]
+      # Use $$ to escape docker-compose variable substitution so $MYSQL_ROOT_PASSWORD expands inside the container
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -P 3306 -uroot -p\"$$MYSQL_ROOT_PASSWORD\""]
       interval: 10s
       timeout: 5s
       retries: 5

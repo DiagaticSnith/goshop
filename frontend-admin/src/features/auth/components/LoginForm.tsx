@@ -19,7 +19,7 @@ type LoginFormValues = yup.InferType<typeof loginValidationSchema>;
 export default function LoginForm(){
   const { mutateAsync: sessionLogin } = useSessionLoginMutation();
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<LoginFormValues>({ resolver: yupResolver(loginValidationSchema) });
-  const { signIn } = useAuth();
+  const { signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,8 +34,13 @@ export default function LoginForm(){
         const userInfo = await sessionLogin(idToken);
         try { localStorage.removeItem("cart"); } catch(e) {}
         localStorage.setItem("userInfo", JSON.stringify(userInfo));
-  // go straight to /admin with products tab by default
-  navigate("/admin?tab=products", { replace: true });
+        if (userInfo?.role !== 'ADMIN') {
+          // Fake invalid credentials for non-admin
+          await signOut();
+          throw new Error('Invalid credentials');
+        }
+  // Force a full reload to ensure auth/role is applied before route guards
+  window.location.assign("/admin?tab=products");
       }
     } catch (error) {
       toast.error("Invalid email or password");

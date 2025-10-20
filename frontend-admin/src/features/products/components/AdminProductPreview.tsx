@@ -27,7 +27,7 @@ export default function AdminProductPreview(props: IProduct) {
   }, [props.createdAt]);
 
   const onDelete = async () => {
-    if (confirm('Hide this product? You can unhide later by editing status.')) {
+    if (confirm('Delete this product? (It will be hidden and can be restored later)')) {
       await del.mutateAsync(props.id);
     }
   };
@@ -89,7 +89,7 @@ export default function AdminProductPreview(props: IProduct) {
             </button>
           ) : (
             <button onClick={onDelete} className="text-xs px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700">
-              Hide
+              Delete
             </button>
           )}
         </div>

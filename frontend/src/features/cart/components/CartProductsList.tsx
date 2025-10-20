@@ -1,14 +1,16 @@
 import { useSelector } from "react-redux";
 import { selectCartItems } from "../cartSlice";
-import { ProductQuantitySelectBox } from "../../../components/Form";
+// Removed ProductQuantitySelectBox in favor of +/- controls
 import { Link } from "react-router-dom";
 import { RxCross1 } from "react-icons/rx";
 import { BsCartX } from "react-icons/bs";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../app/store";
-import { ChangeEvent } from "react";
+import { useCallback } from "react";
 import { FcCheckmark } from "react-icons/fc";
-import { addToCart, removeFromCart } from "../cartSlice";
+import { addToCart, removeFromCart, setCart } from "../cartSlice";
+import { useAuth } from "../../../context/AuthContext";
+import * as cartApi from "../api";
 
 type Props = {
     context?: "cart" | "checkout";
@@ -44,13 +46,57 @@ type CartItemProp = {
 
 const CartProductView = (props: CartItemProp) => {
     const dispatch = useDispatch<AppDispatch>();
-    const handleQuantityChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const newQuantity = Number(e.target.value);
+    const { token } = useAuth();
+    const syncServerCart = useCallback(async () => {
+        if (!token) return;
+        try {
+            const serverCart = await cartApi.getCart(token);
+            const items = (serverCart.items || []).map((it: any) => ({ product: it.product as IProduct, quantity: it.totalQuantity }));
+            dispatch(setCart(items));
+        } catch (e) {
+            console.error('Failed to sync cart from server', e);
+        }
+    }, [token, dispatch]);
+
+    const updateQuantity = async (newQuantity: number) => {
+        if (newQuantity <= 0) {
+            // remove if quantity goes to 0
+            dispatch(removeFromCart({ id: props.product.id }));
+            if (token) {
+                // find cart item id from latest server cart
+                try {
+                    const serverCart = await cartApi.getCart(token);
+                    const toRemove = (serverCart.items || []).find((it: any) => it.productId === props.product.id);
+                    if (toRemove) await cartApi.removeCartItem(token, toRemove.id);
+                    await syncServerCart();
+                } catch (e) { console.error('remove item failed', e); }
+            }
+            return;
+        }
+        // optimistic local update
         dispatch(addToCart({ product: props.product, quantity: newQuantity }));
+        if (token) {
+            try {
+                await cartApi.addOrUpdateCartItem(token, props.product.id, newQuantity);
+                await syncServerCart();
+            } catch (e) {
+                console.error('update quantity failed', e);
+            }
+        }
     };
 
-    const handleProductRemove = () => {
+    const handleProductRemove = async () => {
         dispatch(removeFromCart({ id: props.product.id }));
+        if (token) {
+            try {
+                const serverCart = await cartApi.getCart(token);
+                const toRemove = (serverCart.items || []).find((it: any) => it.productId === props.product.id);
+                if (toRemove) await cartApi.removeCartItem(token, toRemove.id);
+                await syncServerCart();
+            } catch (e) {
+                console.error('remove item failed', e);
+            }
+        }
     };
 
     return (
@@ -86,11 +132,24 @@ const CartProductView = (props: CartItemProp) => {
               ${props.product.price}
                     </h5>
                     {props.context === "cart" && (
-                        <ProductQuantitySelectBox
-                            quantity={props.quantity}
-                            handleQuantityChange={handleQuantityChange}
-                            stockQuantity={props.product.stockQuantity}
-                        />
+                        <div className="inline-flex items-center border rounded-md overflow-hidden">
+                            <button
+                                className="px-3 py-2 text-lg"
+                                onClick={() => updateQuantity(props.quantity - 1)}
+                                aria-label="Decrease quantity"
+                            >
+                                -
+                            </button>
+                            <div className="px-4 select-none">{props.quantity}</div>
+                            <button
+                                className="px-3 py-2 text-lg"
+                                onClick={() => updateQuantity(props.quantity + 1)}
+                                aria-label="Increase quantity"
+                                disabled={props.quantity >= props.product.stockQuantity}
+                            >
+                                +
+                            </button>
+                        </div>
                     )}
                 </div>
 

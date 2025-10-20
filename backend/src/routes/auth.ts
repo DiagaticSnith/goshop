@@ -39,10 +39,10 @@ router.post("/register", register);
 // Verify current session and return minimal user info
 router.get("/me", authMiddleware, async (req, res) => {
     try {
-        const user = await prisma.user.findUnique({ where: { firebaseId: req.uid } });
+    const user = await prisma.user.findUnique({ where: { firebaseId: req.uid } });
         if (!user) return res.status(404).json({ message: "User not found" });
         // If hidden, authMiddleware would have already blocked with 403
-        return res.json({ email: user.email, role: user.role, fullName: user.fullName, status: (user as any).status });
+    return res.json({ email: user.email, role: user.role, fullName: user.fullName, status: (user as any).status });
     } catch (e) {
         return res.status(500).json({ message: "Unable to load session" });
     }

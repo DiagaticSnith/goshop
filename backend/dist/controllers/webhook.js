@@ -17,7 +17,7 @@ const stripe_1 = __importDefault(require("../config/stripe"));
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 const processOrderAddress_1 = require("../utils/processOrderAddress");
 const webhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
+    var _a;
     const sig = req.headers["stripe-signature"];
     const rawBody = req.body; // Đã là Buffer do express.raw
     let event;
@@ -38,24 +38,49 @@ const webhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const session = event.data.object;
         const lineItems = yield stripe_1.default.checkout.sessions.listLineItems(session.id);
         const items = yield Promise.all(lineItems.data.map((lineItem) => __awaiter(void 0, void 0, void 0, function* () {
-            var _f;
+            var _b;
             const product = yield prisma_client_1.default.product.findUnique({
-                where: { priceId: ((_f = lineItem.price) === null || _f === void 0 ? void 0 : _f.id) || '' }
+                where: { priceId: ((_b = lineItem.price) === null || _b === void 0 ? void 0 : _b.id) || '' }
             });
             return { product, quantity: lineItem.quantity || 0 };
         })));
         try {
-            order = yield prisma_client_1.default.order.create({
-                data: {
-                    amount: (session.amount_total || 0) / 100,
-                    userId: ((_b = session.metadata) === null || _b === void 0 ? void 0 : _b.customerId) || "",
-                    items: JSON.stringify(items),
-                    country: ((_d = (_c = session.customer_details) === null || _c === void 0 ? void 0 : _c.address) === null || _d === void 0 ? void 0 : _d.country) || "",
-                    address: (0, processOrderAddress_1.processOrderAddress)((_e = session.customer_details) === null || _e === void 0 ? void 0 : _e.address),
-                    sessionId: session.id,
-                    createdAt: new Date(session.created * 1000)
+            // Use a transaction to create order and update stock atomically
+            order = yield prisma_client_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+                var _c, _d, _e, _f, _g;
+                // 1) Create order row first
+                const created = yield tx.order.create({
+                    data: {
+                        amount: (session.amount_total || 0) / 100,
+                        userId: ((_c = session.metadata) === null || _c === void 0 ? void 0 : _c.customerId) || "",
+                        items: JSON.stringify(items),
+                        country: ((_e = (_d = session.customer_details) === null || _d === void 0 ? void 0 : _d.address) === null || _e === void 0 ? void 0 : _e.country) || "",
+                        address: (0, processOrderAddress_1.processOrderAddress)((_f = session.customer_details) === null || _f === void 0 ? void 0 : _f.address),
+                        sessionId: session.id,
+                        createdAt: new Date(session.created * 1000)
+                    }
+                });
+                // 2) Decrement stock for each purchased item (non-negative)
+                for (const it of items) {
+                    const pid = (_g = it.product) === null || _g === void 0 ? void 0 : _g.id;
+                    const qty = it.quantity || 0;
+                    if (!pid || qty <= 0)
+                        continue;
+                    // Try conditional decrement when enough stock
+                    const dec = yield tx.product.updateMany({
+                        where: { id: pid, stockQuantity: { gte: qty } },
+                        data: { stockQuantity: { decrement: qty } }
+                    });
+                    if (dec.count === 0) {
+                        // Not enough stock: clamp to zero (avoid negative)
+                        const cur = yield tx.product.findUnique({ where: { id: pid }, select: { stockQuantity: true } });
+                        if (cur && cur.stockQuantity > 0) {
+                            yield tx.product.update({ where: { id: pid }, data: { stockQuantity: 0 } });
+                        }
+                    }
                 }
-            });
+                return created;
+            }));
         }
         catch (err) {
             console.error("Prisma create order error:", err.message);

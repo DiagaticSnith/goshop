@@ -6,7 +6,7 @@ const getAllOrders = (token: string): Promise<IOrder[]> => {
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }).then(response => response.data);
+    }).then(response => (response.data?.data ?? response.data ?? []));
 };
 
 export const useGetAllOrdersQuery = (token: string, isAdmin?: boolean) => {

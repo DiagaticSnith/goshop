@@ -4,19 +4,25 @@ import AdminProducts from "../../../features/products/components/AdminProducts";
 import AdminOrdersDashboard from "../../../features/orders/components/AdminOrdersDashboard";
 import { useAuth } from "../../../context/AuthContext";
 import AdminUsers from "../../../features/users/components/AdminUsers";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { ManageCategories } from "../../../features/category";
 
 export const AdminDashboard = () => {
 	const { isAdmin } = useAuth();
 
-	if (!isAdmin) {
-		return (
-			<div className="container">
-				<Navbar />
-				<div className="p-8">You don't have access to the admin dashboard.</div>
-			</div>
-		);
+	const navigate = useNavigate();
+
+	React.useEffect(() => {
+		if (isAdmin === false) {
+			navigate("/auth/login", { replace: true });
+		}
+	}, [isAdmin, navigate]);
+
+	if (isAdmin === undefined) {
+		return <div className="container"><Navbar /><div className="p-8">Loading...</div></div>;
+	}
+	if (isAdmin === false) {
+		return null;
 	}
 
 	const [params, setParams] = useSearchParams();
@@ -64,19 +70,16 @@ export const AdminDashboard = () => {
 				{/* Panel */}
 				{tab === "products" && (
 					<section>
-						<h3 className="font-semibold mb-2">Products</h3>
 						<AdminProducts />
 					</section>
 				)}
 				{tab === "users" && (
 					<section>
-						<h3 className="font-semibold mb-2">Users</h3>
 						<AdminUsers />
 					</section>
 				)}
 				{tab === "categories" && (
 					<section>
-						<h3 className="font-semibold mb-2">Categories</h3>
 						<ManageCategories />
 					</section>
 				)}

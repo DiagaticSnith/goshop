@@ -11,9 +11,14 @@ export const Orders = () => {
     const ordersComponent = useMemo(() => {
         if (!ordersAdmin) return null;
         if (isAdmin && ordersAdmin.length > 0) {
-            return ordersAdmin.map((order) => (
-                <OrderPreview key={order.id} {...order} items={typeof order.items === "string" ? JSON.parse(order.items) : order.items} />
-            ));
+            return ordersAdmin.map((order) => {
+                const parsedItems = typeof order.items === "string" ? (()=>{
+                    try { return JSON.parse(order.items as string); } catch { return []; }
+                })() : (order.items || order.details || []);
+                return (
+                    <OrderPreview key={order.id} {...order} items={parsedItems} />
+                );
+            });
         }
         return null;
     }, [ordersAdmin, isAdmin]);

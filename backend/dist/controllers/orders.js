@@ -65,7 +65,7 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             prisma_client_1.default.order.findMany({
                 where,
                 orderBy,
-                include: { user: true },
+                include: { user: true, details: { include: { product: true } } },
                 skip,
                 take
             }),

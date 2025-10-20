@@ -72,8 +72,11 @@ const UserForm = () => {
                     type="email"
                     id="email"
                     placeholder="Enter Email Address"
-                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none"
+                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none cursor-not-allowed opacity-90"
+                    disabled
+                    aria-disabled
                 />
+                <span className="text-xs text-secondary mt-1">Email cannot be changed</span>
                 {
                     <p className="text-red-500 font-semibold mt-1">
                         {errors.email?.message}
@@ -116,6 +119,7 @@ const UserForm = () => {
                     }
                 </div>
             </div>
+
 
             <button className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4">
           Update profile

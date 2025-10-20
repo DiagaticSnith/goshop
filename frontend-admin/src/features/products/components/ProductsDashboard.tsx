@@ -20,6 +20,9 @@ export default function ProductsDashboard(props: Props){
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number>();
   const [sortOption, setSortOption] = useState<"PRICE_ASC" | "PRICE_DESC" | "DEFAULT">("DEFAULT");
+  // Local toggle for showing hidden products (admin only UI control)
+  const [showHiddenLocal, setShowHiddenLocal] = useState(false);
+  const showHidden = props.showHidden ?? showHiddenLocal;
 
   const { mutate, data: searchResults } = useSearchProductMutation();
   const debouncedSearch = useDebounce(() => { mutate(searchQuery); }, 500);
@@ -33,13 +36,26 @@ export default function ProductsDashboard(props: Props){
   return (
     <>
       <div className="flex w-full flex-col sm:flex-row items-start sm:items-center justify-start sm:justify-between space-y-4 sm:space-y-0 mb-8">
-        <SearchBox searchQuery={searchQuery} handleSearchQueryChange={handleSearchQueryChange} />
+        <div className="flex items-center w-full sm:w-auto">
+          <SearchBox searchQuery={searchQuery} handleSearchQueryChange={handleSearchQueryChange} />
+          {props.isAdmin && (
+            <label className="ml-3 text-sm inline-flex items-center select-none">
+              <input
+                type="checkbox"
+                className="mr-2"
+                checked={showHidden}
+                onChange={(e) => setShowHiddenLocal(e.target.checked)}
+              />
+              Show deleted
+            </label>
+          )}
+        </div>
         <div className="flex items-center space-x-2 w-full sm:w-fit">
           <CategorySelectBox selectedCategory={selectedCategory} handleSelectCategory={handleSelectCategory} />
           <SortSelectBox sortOption={sortOption} setSortOption={setSortOption} />
         </div>
       </div>
-  <ProductsGrid isAdmin={props.isAdmin} showHidden={props.showHidden} selectedCategory={selectedCategory} searchQuery={searchQuery} searchResults={searchResults} sortOption={sortOption} />
+      <ProductsGrid isAdmin={props.isAdmin} showHidden={showHidden} selectedCategory={selectedCategory} searchQuery={searchQuery} searchResults={searchResults} sortOption={sortOption} />
     </>
   )
 }
@@ -64,7 +80,10 @@ const ProductsGrid = (props: ProductsGridProps) => {
     const source = props.isAdmin && props.showHidden ? allProductsAdminQuery.data : allProductsQuery.data;
     if (!source) return products;
     products = [...source];
-    if (!(props.isAdmin && props.showHidden)) {
+    // When showing deleted, only include HIDDEN; otherwise only ACTIVE
+    if (props.isAdmin && props.showHidden) {
+      products = products.filter((p: any) => p.status === 'HIDDEN');
+    } else {
       products = products.filter((p: any) => p.status !== 'HIDDEN');
     }
     if (props.searchResults && props.searchQuery !== "") products = [...props.searchResults];

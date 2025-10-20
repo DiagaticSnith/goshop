@@ -55,5 +55,5 @@ COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-# Run the built Node app directly. We set NODE_ENV above in the image, so we don't need cross-env here.
+# Run the built Node app directly; DB is managed manually as requested
 CMD [ "node", "dist/index.js" ]
