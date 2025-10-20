@@ -8,6 +8,7 @@ const authMiddleware_1 = require("../middleware/authMiddleware");
 const verifyRolesMiddleware_1 = require("../middleware/verifyRolesMiddleware");
 const router = (0, express_1.Router)();
 router.get("/", products_1.getAllProducts);
+router.get("/admin/all", authMiddleware_1.authMiddleware, (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), products_1.getAllProductsAdmin);
 router.post("/search", products_1.searchForProducts);
 router.get("/category/:id", products_1.getProductsByCategory);
 // inventory stats (admin only) MUST be before ":id" route

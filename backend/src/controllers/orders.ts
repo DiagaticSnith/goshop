@@ -65,7 +65,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
             prisma.order.findMany({
                 where,
                 orderBy,
-                include: { user: true },
+                include: { user: true, details: { include: { product: true } } },
                 skip,
                 take
             }),

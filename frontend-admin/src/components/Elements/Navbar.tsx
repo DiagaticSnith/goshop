@@ -23,7 +23,7 @@ const Navbar = () => {
         <div className="bg-white px-2 xs:px-6 py-5 justify-between rounded-xl items-center my-4 drop-shadow-lg relative z-30">
             <ul className="flex items-center text-sm justify-between">
                 <li className="font-bold text-dark">
-                    <Link to="/">GoShop</Link>
+                    GoShop
                 </li>
                 <div className="flex text-secondary text-lg items-center">
                     <li className="font-medium text-sm text-dark relative ml-5">

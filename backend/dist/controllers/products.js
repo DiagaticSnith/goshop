@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getInventoryStats = exports.setProductStatus = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductsByCategory = exports.searchForProducts = exports.getProductById = exports.getAllProducts = void 0;
+exports.getInventoryStats = exports.setProductStatus = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductsByCategory = exports.searchForProducts = exports.getProductById = exports.getAllProductsAdmin = exports.getAllProducts = void 0;
 const stripe_1 = __importDefault(require("../config/stripe"));
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 // Return true if value is an absolute http/https URL
@@ -35,6 +35,15 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     res.status(200).json(products);
 });
 exports.getAllProducts = getAllProducts;
+// Admin: get all products (including hidden)
+const getAllProductsAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const products = yield prisma_client_1.default.product.findMany({
+        include: { category: true },
+        orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json(products);
+});
+exports.getAllProductsAdmin = getAllProductsAdmin;
 const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const product = yield prisma_client_1.default.product.findFirst({
         where: { id: req.params.id, status: 'ACTIVE' },

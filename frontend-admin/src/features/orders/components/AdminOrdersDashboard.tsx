@@ -3,6 +3,8 @@ import { useAuth } from '../../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../app/api';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { toImageUrl } from '../../../utils/imageUrl';
+import React from 'react';
 
 type OrdersStats = { totalOrders: number; totalRevenue: number; statsByDay: { date: string; count: number; revenue: number }[] };
 type InventoryStats = { productsCount: number; totalStock: number; outOfStockCount: number; lowStockCount: number };
@@ -55,9 +57,8 @@ export default function AdminOrdersDashboard() {
 
   return (
     <div className="mt-4 p-5 bg-white drop-shadow-custom rounded-md h-full">
-      <h2 className="text-2xl font-semibold mb-6">Admin Dashboard</h2>
-      {/* Top stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6">
+      {/* Top stats (remove out of stock & low stock) */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div>
           <div className="text-sm text-gray-600">Products</div>
           <div className="text-2xl font-semibold">{inventoryStats.data?.productsCount ?? 0}</div>
@@ -65,14 +66,6 @@ export default function AdminOrdersDashboard() {
         <div>
           <div className="text-sm text-gray-600">Total Stock</div>
           <div className="text-2xl font-semibold">{inventoryStats.data?.totalStock ?? 0}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-600">Out of Stock</div>
-          <div className="text-2xl font-semibold">{inventoryStats.data?.outOfStockCount ?? 0}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-600">Low Stock (≤5)</div>
-          <div className="text-2xl font-semibold">{inventoryStats.data?.lowStockCount ?? 0}</div>
         </div>
         <div>
           <div className="text-sm text-gray-600">Total Orders</div>
@@ -146,19 +139,116 @@ export default function AdminOrdersDashboard() {
         </select>
       </div>
 
-      {/* Orders list moved below */}
+      {/* Orders table with expandable details */}
       {ordersQuery.data?.data?.length ? (
-        <ul className="divide-y">
-          {ordersQuery.data.data.map((o: any) => (
-            <li key={o.id} className="py-3 text-sm flex justify-between">
-              <span>#{o.id} • {o.user?.email ?? 'N/A'}</span>
-              <span>${(o.amount ?? 0).toFixed(2)}</span>
-            </li>
-          ))}
-        </ul>
+        <OrdersTable orders={ordersQuery.data.data} />
       ) : (
         <div className="text-sm text-gray-600">No orders found.</div>
       )}
+    </div>
+  );
+}
+
+function OrdersTable({ orders }: { orders: any[] }) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const onToggle = (id: number) => setExpanded(expanded === id ? null : id);
+
+  return (
+    <div className="overflow-auto">
+      <table className="min-w-full text-sm">
+        <thead className="bg-gray-50">
+          <tr className="text-left">
+            <th className="px-3 py-2 w-10"></th>
+            <th className="px-3 py-2">Order</th>
+            <th className="px-3 py-2">Date</th>
+            <th className="px-3 py-2">Customer</th>
+            <th className="px-3 py-2">Address</th>
+            <th className="px-3 py-2 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {orders.map((o: any) => {
+            const createdAt = o.createdAt ? new Date(o.createdAt).toLocaleString() : '';
+            const parsedItems = Array.isArray(o.items)
+              ? o.items
+              : typeof o.items === 'string'
+              ? (() => { try { return JSON.parse(o.items); } catch { return []; } })()
+              : [];
+            const lines = (o.details && o.details.length > 0) ? o.details : parsedItems;
+            const isOpen = expanded === o.id;
+            return (
+              <React.Fragment key={o.id}>
+                <tr className="hover:bg-gray-50">
+                  <td className="px-3 py-2 align-top">
+                    <button onClick={() => onToggle(o.id)} className="w-6 h-6 rounded hover:bg-gray-200 flex items-center justify-center" aria-label="Expand">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-90' : ''}`}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </button>
+                  </td>
+                  <td className="align-top px-3 py-2 font-semibold">#{o.id}</td>
+                  <td className="align-top px-3 py-2">{createdAt}</td>
+                  <td className="align-top px-3 py-2">{o.user?.email ?? 'N/A'}</td>
+                  <td className="align-top px-3 py-2 max-w-[260px] truncate" title={`${o.address || ''}${o.country ? `, ${o.country}` : ''}`}>{o.address}{o.country ? `, ${o.country}` : ''}</td>
+                  <td className="align-top px-3 py-2 text-right font-semibold">${(o.amount ?? 0).toFixed(2)}</td>
+                </tr>
+                {isOpen && (
+                  <tr className="bg-white">
+                    <td colSpan={6} className="px-3 py-3">
+                      <div className="border rounded-xl overflow-hidden">
+                        <table className="min-w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-3 py-2 text-left">Product</th>
+                              <th className="px-3 py-2 text-left">Qty</th>
+                              <th className="px-3 py-2 text-left">Price</th>
+                              <th className="px-3 py-2 text-left">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {lines.map((it: any, idx: number) => {
+                              const product = it.product;
+                              const qty = it.totalQuantity ?? it.quantity ?? 0;
+                              const price = product?.price ?? 0;
+                              const sub = it.totalPrice ?? (price * qty);
+                              const img = toImageUrl(product?.image);
+                              return (
+                                <tr key={it.id ?? idx} className="hover:bg-neutral-50">
+                                  <td className="px-3 py-2">
+                                    <div className="flex items-center gap-3">
+                                      {img ? <img src={img} alt={product?.name} className="w-14 h-14 rounded object-cover" /> : <div className="w-14 h-14 rounded bg-gray-200" />}
+                                      <div className="font-semibold">{product?.name ?? 'N/A'}</div>
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-2">{qty}</td>
+                                  <td className="px-3 py-2">${Number(price).toFixed(2)}</td>
+                                  <td className="px-3 py-2 font-semibold">${Number(sub).toFixed(2)}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                        <div className="px-3 py-3 border-t flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm">
+                          <div>
+                            <div className="text-gray-600">Shipping details</div>
+                            <div className="font-semibold">{o.user?.fullName ?? ''}</div>
+                            {o.address && <div className="font-semibold">{o.address}</div>}
+                          </div>
+                          <div className="sm:text-right mt-2 sm:mt-0">
+                            <div className="text-gray-600">Total</div>
+                            <div className="text-base font-bold">${(o.amount ?? 0).toFixed(2)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

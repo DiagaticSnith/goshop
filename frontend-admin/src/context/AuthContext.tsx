@@ -4,6 +4,7 @@ import { User, signInWithEmailAndPassword, UserCredential, signInWithCustomToken
 import { useRegisterMutation } from "../features/auth";
 import { useDispatch } from "react-redux";
 import { clearCart } from "../features/cart/cartSlice";
+import { api } from "../app/api";
 
 interface Props {
     children: ReactNode;
@@ -51,17 +52,34 @@ export const AuthProvider = ({ children }: Props) => {
             setCurrentUser(user);
             const decoded = await user.getIdTokenResult();
             setToken(decoded.token);
-            // Lấy role từ backend nếu có
-            const userInfo = localStorage.getItem("userInfo");
-            if (userInfo) {
+            // Prefer role from DB (localStorage set by /auth/session-login). Fallback to Firebase claims.
+            const claimRole = (decoded.claims as any)?.role as string | undefined;
+            const ls = localStorage.getItem("userInfo");
+            let lsRole: string | undefined;
+            if (ls) {
                 try {
-                    const parsed = JSON.parse(userInfo);
-                    setIsAdmin(parsed.role === "ADMIN");
-                } catch {
-                    setIsAdmin(false);
-                }
+                    const parsed = JSON.parse(ls);
+                    lsRole = parsed?.role;
+                } catch {}
+            }
+            if (lsRole) {
+                setIsAdmin(lsRole === "ADMIN");
+            } else if (claimRole) {
+                setIsAdmin(claimRole === "ADMIN");
             } else {
-                setIsAdmin(false);
+                setIsAdmin(undefined);
+            }
+
+            // Background: refresh role from backend /auth/me to ensure DB is source of truth
+            try {
+                const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${decoded.token}` } });
+                if (me?.data?.role) {
+                    const nextInfo = { email: me.data.email, role: me.data.role, fullName: me.data.fullName };
+                    localStorage.setItem("userInfo", JSON.stringify(nextInfo));
+                    setIsAdmin(me.data.role === "ADMIN");
+                }
+            } catch (e) {
+                // ignore fetch /auth/me errors; rely on existing info
             }
         } else {
             setCurrentUser(null);

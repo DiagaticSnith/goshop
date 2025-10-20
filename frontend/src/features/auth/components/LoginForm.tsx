@@ -29,7 +29,7 @@ const LoginForm = () => {
         resolver: yupResolver(loginValidationSchema),
     });
 
-    const { signIn, signInWithGoogle } = useAuth();
+    const { signIn, signInWithGoogle, signOut } = useAuth();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const handleLogin = async (data: LoginForm) => {
@@ -49,13 +49,12 @@ const LoginForm = () => {
                 // debug: ensure userInfo is stored before navigation
                 // eslint-disable-next-line no-console
                 console.log('sessionLogin -> stored userInfo', userInfo);
-                // Điều hướng: admin vào /admin (force reload), user về homepage
-                if (userInfo?.role === "ADMIN") {
-                    // Force a full reload to avoid any role timing issues
-                    window.location.assign("/admin");
-                } else {
-                    navigate("/", { replace: true });
+                // Only allow USER role in this app; otherwise fake invalid credentials
+                if (userInfo?.role !== "USER") {
+                    await signOut();
+                    throw new Error('Invalid credentials');
                 }
+                navigate("/", { replace: true });
             }
         } catch (error) {
             toast.error("Invalid email or password");
