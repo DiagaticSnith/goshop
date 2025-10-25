@@ -60,8 +60,12 @@ export const createCheckoutSession = async (req: Request, res: Response, next: N
             mode: "payment",
             line_items: rawLineItems,
             currency: "usd",
+            // Do NOT collect address in Stripe Checkout; we use the user's typed address only
+            customer_email: req.body.email || undefined,
             metadata: {
-                customerId: req.body.userId
+                customerId: req.body.userId || "",
+                // Also store the address user typed (free-form) so webhook can fallback
+                address: (req.body.address || "").toString().slice(0, 500)
             }
         });
 

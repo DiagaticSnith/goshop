@@ -23,11 +23,16 @@ export const useGetCheckoutSessionQuery = (sessionId: string, token: string) => 
                 minute: "numeric"
             });
 
-            const shippingAddress = data.customer_details.address;
-            const line1 = [shippingAddress.line1, shippingAddress.line2].filter(Boolean).join(", ");
-            const line2 = [shippingAddress.city, shippingAddress.state].filter(Boolean).join(", ");
-            const line3 = [shippingAddress.postal_code].filter(Boolean).join(", ");
-            const address = [line1, line2, line3].filter(Boolean).join(", ");
+            // Prefer the address the user typed (stored in Stripe metadata)
+            const metadataAddress = (data?.metadata?.address || "").toString().trim();
+            let address = metadataAddress;
+            if (!address) {
+                const shippingAddress = data?.customer_details?.address || {};
+                const line1 = [shippingAddress.line1, shippingAddress.line2].filter(Boolean).join(", ");
+                const line2 = [shippingAddress.city, shippingAddress.state].filter(Boolean).join(", ");
+                const line3 = [shippingAddress.postal_code].filter(Boolean).join(", ");
+                address = [line1, line2, line3].filter(Boolean).join(", ");
+            }
 
             return {
                 ...data,

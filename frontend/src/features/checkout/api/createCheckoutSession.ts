@@ -1,8 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../../../app/api";
 
+type CreateSessionData = { lineItems: ILineItem[]; userId: string; address?: string; email?: string };
 
-const createCheckoutSession = (sessionData: {lineItems: ILineItem[], userId: string}, token: string): Promise<{sessionId: string}> => {
+const createCheckoutSession = (sessionData: CreateSessionData, token: string): Promise<{sessionId: string}> => {
     return api.post("/checkout/create-session", sessionData, {
         headers: {
             "Authorization": `Bearer ${token}`
@@ -12,6 +13,6 @@ const createCheckoutSession = (sessionData: {lineItems: ILineItem[], userId: str
 
 export const useCreateCheckoutSessionMutation = (token: string) => {
     return useMutation({
-        mutationFn: (sessionData: {lineItems: ILineItem[], userId: string}) => createCheckoutSession(sessionData, token)
+        mutationFn: (sessionData: CreateSessionData) => createCheckoutSession(sessionData, token)
     });
 };

@@ -3,8 +3,12 @@ import { useAuth } from '../../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../app/api';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+<<<<<<< Updated upstream
 import { toImageUrl } from '../../../utils/imageUrl';
 import React from 'react';
+=======
+import { OrderPreview } from './OrderPreview';
+>>>>>>> Stashed changes
 
 type OrdersStats = { totalOrders: number; totalRevenue: number; statsByDay: { date: string; count: number; revenue: number }[] };
 type InventoryStats = { productsCount: number; totalStock: number; outOfStockCount: number; lowStockCount: number };
@@ -42,13 +46,14 @@ export default function AdminOrdersDashboard() {
   const [to, setTo] = useState<string>('');
   const [sortBy, setSortBy] = useState<'date'|'amount'>('date');
   const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc');
+  const [status, setStatus] = useState<'ALL'|'PENDING'|'CONFIRMED'|'REJECTED'>('ALL');
 
   const ordersQuery = useQuery({
-    queryKey: ['orders','list', { search, from, to, sortBy, sortDir }, token],
+    queryKey: ['orders','list', { search, from, to, sortBy, sortDir, status }, token],
     queryFn: async () => {
       const res = await api.get('/orders', {
         headers: { Authorization: `Bearer ${token}` },
-        params: { search, from, to, sortBy: sortBy === 'date' ? 'createdAt' : 'amount', sortDir }
+        params: { search, from, to, sortBy: sortBy === 'date' ? 'createdAt' : 'amount', sortDir, status: status === 'ALL' ? undefined : status }
       });
       return res.data as { data: any[]; total: number };
     },
@@ -107,20 +112,7 @@ export default function AdminOrdersDashboard() {
         </div>
       </div>
 
-      {/* Side list summary of last7 like screenshot */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="hidden lg:block" />
-        <div>
-          <ul className="text-sm space-y-1">
-            {last7.map(d => (
-              <li key={d.date} className="flex justify-between">
-                <span>{d.date}</span>
-                <span>{d.count} / ${d.revenue.toFixed(2)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      {/* Removed the side summary list as requested */}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -129,6 +121,12 @@ export default function AdminOrdersDashboard() {
         <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="border rounded px-3 py-2 text-sm" />
         <label className="text-sm text-gray-600">To</label>
         <input type="date" value={to} onChange={e => setTo(e.target.value)} className="border rounded px-3 py-2 text-sm" />
+        <select value={status} onChange={e => setStatus(e.target.value as any)} className="border rounded px-2 py-2 text-sm">
+          <option value="ALL">All</option>
+          <option value="PENDING">Pending</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
         <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="border rounded px-2 py-2 text-sm">
           <option value="date">Date</option>
           <option value="amount">Amount</option>
@@ -139,12 +137,28 @@ export default function AdminOrdersDashboard() {
         </select>
       </div>
 
+<<<<<<< Updated upstream
       {/* Orders table with expandable details */}
       {ordersQuery.data?.data?.length ? (
         <OrdersTable orders={ordersQuery.data.data} />
       ) : (
         <div className="text-sm text-gray-600">No orders found.</div>
       )}
+=======
+      {/* Orders list using OrderPreview (same UI style as user app) */}
+      <div className="mt-6">
+        <h3 className="font-semibold text-lg mb-3">Orders</h3>
+        {ordersQuery.data?.data?.length ? (
+          <div>
+            {ordersQuery.data.data.map((o: any) => (
+              <OrderPreview key={o.id} {...o} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-600">No orders found.</div>
+        )}
+      </div>
+>>>>>>> Stashed changes
     </div>
   );
 }

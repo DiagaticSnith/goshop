@@ -8,7 +8,6 @@ import ProductsDashboard from "./ProductsDashboard";
 export const AdminProducts = () => {
     const [isShowCreateProduct, setIsShowCreateProduct] = useState(false);
     const { isAdmin } = useAuth();
-        const [showHidden, setShowHidden] = useState(false);
 
     const handleCreateProduct = () => {
         setIsShowCreateProduct(true);
@@ -20,10 +19,6 @@ export const AdminProducts = () => {
                 <div className="flex items-center justify-between mb-8">
                     <h3 className="font-semibold text-xl mr-4 sm:mr-0 sm:text-3xl">Manage Products</h3>
                     <div className="flex items-center space-x-2">
-                            <label className="flex items-center text-sm mr-2">
-                                <input type="checkbox" className="mr-2" checked={showHidden} onChange={(e) => setShowHidden(e.target.checked)} />
-                                Show hidden
-                            </label>
                         <button
                             id="create-product"
                             onClick={handleCreateProduct}
@@ -35,7 +30,7 @@ export const AdminProducts = () => {
                         {/* Manage categories removed from this section; use Admin > Categories tab instead */}
                     </div>
                 </div>
-                    <ProductsDashboard isAdmin={isAdmin} showHidden={showHidden} />
+                    <ProductsDashboard isAdmin={isAdmin} />
             </div>
             {isShowCreateProduct && (
                 <CreateProductPopup setIsShowCreateProduct={setIsShowCreateProduct} />

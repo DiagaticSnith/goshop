@@ -37,6 +37,7 @@ export const webhook = async (req: Request, res: Response) => {
         }));
 
         try {
+<<<<<<< Updated upstream
             // Use a transaction to create order and update stock atomically
             order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
                 // 1) Create order row first
@@ -71,10 +72,40 @@ export const webhook = async (req: Request, res: Response) => {
                             await tx.product.update({ where: { id: pid }, data: { stockQuantity: 0 } });
                         }
                     }
+=======
+            order = await prisma.order.create({
+                data: {
+                    amount: (session.amount_total || 0) / 100,
+                    userId: session.metadata?.customerId || "",
+                    items: JSON.stringify(items),
+                    country: session.customer_details?.address?.country || "",
+                    // Prefer the address user provided in metadata if present; fallback to Stripe normalized address
+                    address: (session.metadata?.address && session.metadata.address.trim().length > 0)
+                        ? session.metadata.address
+                        : processOrderAddress(session.customer_details?.address as Stripe.Address | null),
+                    sessionId: session.id,
+                    status: 'PENDING' as any,
+                    createdAt: new Date(session.created * 1000)
+>>>>>>> Stashed changes
                 }
 
                 return created;
             });
+
+            // Clear user's cart after successful order creation
+            const userId = session.metadata?.customerId;
+            if (userId) {
+                const userCart = await prisma.cart.findUnique({
+                    where: { userId },
+                    include: { items: true }
+                });
+                if (userCart) {
+                    // Delete all cart items first, then optionally the cart itself
+                    await prisma.cartItem.deleteMany({
+                        where: { cartId: userCart.id }
+                    });
+                }
+            }
         } catch (err: any) {
             console.error("Prisma create order error:", err.message);
         }

@@ -18,16 +18,29 @@ export const OrderPreview = (props: IOrder) => {
                         <p className="font-semibold">{convertData(props.createdAt)}</p>
                     </div>
                     <div>
-                        <p className="text-secondary">Total Price</p>
-                        <p className="font-semibold">${props.amount}</p>
+                        <p className="text-secondary">Total</p>
+                        <p className="font-semibold">${props.amount?.toFixed ? props.amount.toFixed(2) : props.amount}</p>
                     </div>
                 </div>
-                <button
-                    className="bg-primary text-white font-semibold text-xs px-6 py-3 rounded-md transition-opacity hover:bg-opacity-90 mt-4 xs:mt-0 xs:ml-4 md:ml-0"
-                    onClick={() => setIsShowInvoice((prevShow) => !prevShow)}
-                >
-                    {isShowInvoice ? "Hide" : "View"} invoice
-                </button>
+                <div className="flex items-center gap-2 mt-4 xs:mt-0 xs:ml-4 md:ml-0">
+                    <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                            props.status === 'CONFIRMED'
+                                ? 'bg-green-100 text-green-700'
+                                : props.status === 'REJECTED'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                        }`}
+                    >
+                        {props.status || 'PENDING'}
+                    </span>
+                    <button
+                        className="bg-primary text-white font-semibold text-xs px-6 py-3 rounded-md transition-opacity hover:bg-opacity-90"
+                        onClick={() => setIsShowInvoice((prevShow) => !prevShow)}
+                    >
+                        {isShowInvoice ? "Hide" : "View"} invoice
+                    </button>
+                </div>
             </div>
             {isShowInvoice && (
                 <div className="border-gray-200 border rounded-xl bg-white mb-8 animate-dropdown text-sm">
@@ -90,10 +103,14 @@ export const OrderPreview = (props: IOrder) => {
                                         )))}
                         </tbody>
                     </table>
-                    <div className="px-4 py-3 border-t-gray-200 border-t">
-                        <p className="text-secondary">Shipping details</p>
-                        <p className="font-semibold">{props.user?.fullName}</p>
-                        <p className="font-semibold">{props.address}</p>
+                    <div className="px-4 py-3 border-t-gray-200 border-t text-sm">
+                        <div className="text-secondary">Shipping address</div>
+                        <div className="font-medium whitespace-pre-wrap">{props.address || "(no address)"}</div>
+                        {props.country && (
+                            <div className="text-secondary mt-1">
+                                Country: <span className="font-medium">{props.country}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
