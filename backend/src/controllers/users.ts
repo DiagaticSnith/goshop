@@ -56,14 +56,17 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         // Admin UI should not change email; if email provided, discard.
 
         const image = req.image || req.body.avatar;
+        // Build update payload dynamically to avoid touching unknown fields
+        const updateData: any = {
+            fullName: newFullName,
+            avatar: image || foundUser.avatar
+        };
+        if (typeof req.body.address === 'string') {
+            updateData.address = req.body.address;
+        }
         const updatedUser = await prisma.user.update({
-            where: {
-                firebaseId: userId
-            },
-            data: {
-                fullName: newFullName,
-                avatar: image || foundUser.avatar
-            }
+            where: { firebaseId: userId },
+            data: updateData
         });
         // Update Firebase displayName/photo only (do not modify email here)
         await auth.updateUser(userId || "", {

@@ -7,6 +7,7 @@ interface IOrder {
     id: int;
     amount: number;
     userId: string;
+    status?: 'PENDING' | 'CONFIRMED' | 'REJECTED';
     // legacy `items` (stored as JSON) or new `details` relation
     items?: {
         product: IProduct;

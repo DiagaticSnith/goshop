@@ -9,7 +9,7 @@ type Props = {
 const CheckoutTotalPrice = (props: Props) => {
     return (
         <div className="mb-8 lg:my-0 flex flex-col items-center justify-center mx-auto w-2/3">
-            <div className="border-gray-300 border-[1px] rounded-xl py-4 px-6 h-fit w-full">
+            <div className="border-gray-300 border-[1px] rounded-xl py-4 px-6 h-fit w-full mb-4">
                 <h5 className="font-semibold text-lg xs:text-xl mb-2">Order Summary</h5>
                 <div className="flex justify-between w-full text-secondary border-gray-300 border-b-[1px] py-2">
                     <p className="mr-2 xs:mr-0">Subtotal</p>

@@ -5,4 +5,5 @@ interface IUser {
     role: "USER" | "ADMIN";
     status?: "ACTIVE" | "HIDDEN";
     avatar?: string | Blob;
+    address?: string;
 }

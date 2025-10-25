@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma-client";
+import stripe from "../config/stripe";
 
 export const getAllOrders = async (req: Request, res: Response) => {
     // Support query params for admin listing: search, sort, from, to, page, pageSize
@@ -11,13 +12,21 @@ export const getAllOrders = async (req: Request, res: Response) => {
             from,
             to,
             page = "1",
-            pageSize = "50"
+            pageSize = "50",
+            status
         } = req.query as Record<string, string>;
 
         const take = Math.min(200, parseInt(pageSize, 10) || 50);
         const skip = (Math.max(1, parseInt(page, 10) || 1) - 1) * take;
 
         const where: any = {};
+        // status filter (PENDING | CONFIRMED | REJECTED)
+        if (status && typeof status === 'string') {
+            const s = status.toUpperCase();
+            if (s === 'PENDING' || s === 'CONFIRMED' || s === 'REJECTED') {
+                where.status = s as any;
+            }
+        }
 
         // date range filter (validate)
         if (from || to) {
@@ -127,19 +136,23 @@ export const getOrderById = async (req: Request, res: Response) => {
 export const getOrdersStats = async (req: Request, res: Response) => {
     // Thống kê đơn hàng: tổng đơn, tổng doanh thu, đơn theo ngày trong 7 ngày gần nhất
     try {
-        const totalOrders = await prisma.order.count();
-        const totalRevenueAggregate = await prisma.order.aggregate({
+        // Count all orders (PENDING, CONFIRMED, REJECTED)
+        const totalOrders = await (prisma as any).order.count();
+        // Revenue only counts CONFIRMED orders
+        const totalRevenueAggregate = await (prisma as any).order.aggregate({
             _sum: {
                 amount: true
-            }
+            },
+            where: { status: 'CONFIRMED' }
         });
-        const totalRevenue = totalRevenueAggregate._sum.amount || 0;
+        const totalRevenue = (totalRevenueAggregate?._sum?.amount as number) || 0;
 
         // Orders per day (last 7 days)
         const now = new Date();
         const sevenDaysAgo = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000); // includes today (7 days)
 
-        const orders = await prisma.order.findMany({
+        // Fetch all orders for count, but only CONFIRMED for revenue
+        const allOrders = await (prisma as any).order.findMany({
             where: {
                 createdAt: {
                     gte: sevenDaysAgo
@@ -147,7 +160,8 @@ export const getOrdersStats = async (req: Request, res: Response) => {
             },
             select: {
                 createdAt: true,
-                amount: true
+                amount: true,
+                status: true
             }
         });
 
@@ -159,17 +173,66 @@ export const getOrdersStats = async (req: Request, res: Response) => {
             statsByDay.push({ date: key, count: 0, revenue: 0 });
         }
 
-        orders.forEach((o: { createdAt: Date; amount?: number | null }) => {
+        allOrders.forEach((o: { createdAt: Date; amount?: number | null; status: string }) => {
             const key = o.createdAt.toISOString().slice(0, 10);
             const stat = statsByDay.find(s => s.date === key);
             if (stat) {
-                stat.count += 1;
-                stat.revenue += (o.amount || 0) as number;
+                stat.count += 1;  // Count all orders
+                // Only add to revenue if CONFIRMED
+                if (o.status === 'CONFIRMED') {
+                    stat.revenue += (o.amount || 0) as number;
+                }
             }
         });
 
         return res.status(200).json({ totalOrders, totalRevenue, statsByDay });
     } catch (error) {
         return res.status(500).json({ message: "Unable to compute orders stats", error });
+    }
+};
+
+// Admin: confirm order (counts into revenue/stats)
+export const confirmOrder = async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) return res.status(400).json({ message: 'Invalid order id' });
+        const order = await prisma.order.findUnique({ where: { id } });
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        if ((order as any).status === 'CONFIRMED') return res.status(200).json(order);
+        if ((order as any).status === 'REJECTED') return res.status(400).json({ message: 'Cannot confirm a rejected order' });
+    const updated = await (prisma as any).order.update({ where: { id }, data: { status: 'CONFIRMED' } });
+        return res.json(updated);
+    } catch (error) {
+        return res.status(500).json({ message: 'Unable to confirm order', error });
+    }
+};
+
+// Admin: reject order (refund customer, exclude from stats)
+export const rejectOrder = async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) return res.status(400).json({ message: 'Invalid order id' });
+        const order = await prisma.order.findUnique({ where: { id } });
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        if ((order as any).status === 'REJECTED') return res.status(200).json(order);
+        if ((order as any).status === 'CONFIRMED') return res.status(400).json({ message: 'Cannot reject a confirmed order' });
+
+        // Try to refund via Stripe Checkout session -> payment_intent
+        try {
+            const session = await stripe.checkout.sessions.retrieve(order.sessionId);
+            const paymentIntentId = session.payment_intent as string | null;
+            if (paymentIntentId) {
+                // Create full refund; in real-world handle partials and idempotency keys
+                await stripe.refunds.create({ payment_intent: paymentIntentId });
+            }
+        } catch (e) {
+            // Log but proceed to mark rejected so admin can resolve separately
+            console.error('Stripe refund failed for order', id, e);
+        }
+
+    const updated = await (prisma as any).order.update({ where: { id }, data: { status: 'REJECTED' } });
+        return res.json(updated);
+    } catch (error) {
+        return res.status(500).json({ message: 'Unable to reject order', error });
     }
 };

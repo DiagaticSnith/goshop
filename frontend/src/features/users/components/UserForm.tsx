@@ -5,8 +5,9 @@ import PreviewImage from "../../../components/Elements/PreviewImage";
 import { useUpdateUserMutation } from "../api/updateUser";
 import { convertToFormData } from "../../../utils/convertToFormData";
 import { useAuth } from "../../../context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Spinner } from "../../../components/Elements/Spinner";
+import { useGetUserQuery } from "../api/getUser";
 
 const fieldRequiredError = "This field is required.";
 const userValidationSchema = yup.object({
@@ -14,6 +15,7 @@ const userValidationSchema = yup.object({
     firstName: yup.string().required(fieldRequiredError).matches(/^[aA-zZ\s]+$/, "Name can only contain alphabets"),
     lastName: yup.string().required(fieldRequiredError).matches(/^[aA-zZ\s]+$/, "Name can only contain alphabets"),
     image: yup.mixed().nullable(),
+    address: yup.string().optional(),
 });
 export type UserFormType = yup.InferType<typeof userValidationSchema>;
 
@@ -21,17 +23,32 @@ export type UserFormType = yup.InferType<typeof userValidationSchema>;
 const UserForm = () => {
     const { currentUser, signInWithToken, token } = useAuth();
     const [isUpdating, setIsUpdating] = useState(false);
+    const { data: userData } = useGetUserQuery(currentUser?.uid || "", token || "");
 
-    const { register, handleSubmit, formState: { errors, isDirty }, control, setValue } = useForm<UserFormType>({
+    const { register, handleSubmit, formState: { errors, isDirty }, control, setValue, reset } = useForm<UserFormType>({
         resolver: yupResolver<UserFormType>(userValidationSchema),
         defaultValues: {
             email: currentUser?.email || "",
             firstName: currentUser?.displayName?.split(" ")[0] || "",
             lastName: currentUser?.displayName?.split(" ")[1] || "",
-            image: currentUser?.photoURL
+            image: currentUser?.photoURL,
+            address: "",
         }
     });
     const [preview, setPreview] = useState<string | ArrayBuffer | null | undefined>(currentUser?.photoURL);
+
+    // Update form when userData is loaded
+    useEffect(() => {
+        if (userData) {
+            reset({
+                email: currentUser?.email || "",
+                firstName: currentUser?.displayName?.split(" ")[0] || "",
+                lastName: currentUser?.displayName?.split(" ")[1] || "",
+                image: currentUser?.photoURL,
+                address: userData.address || "",
+            });
+        }
+    }, [userData, currentUser, reset]);
 
     const { mutateAsync: updateUserOnBackend } = useUpdateUserMutation(currentUser?.uid || "", token);
     const onSubmit = async (data: UserFormType) => {
@@ -42,7 +59,8 @@ const UserForm = () => {
                 firebaseId: currentUser?.uid,
                 email: data.email.trim(),
                 fullName,
-                avatar: data.image as Blob | string
+                avatar: data.image as Blob | string,
+                address: data.address || "",
             }));
             await signInWithToken(token);
             currentUser?.reload();
@@ -120,6 +138,21 @@ const UserForm = () => {
                 </div>
             </div>
 
+<<<<<<< Updated upstream
+=======
+            <div className="flex flex-col mb-3">
+                <label htmlFor="address" className="text-secondary">
+            Shipping Address
+                </label>
+                <textarea
+                    {...register("address")}
+                    id="address"
+                    placeholder="Enter your full shipping address (street, city, state, postal code, country)..."
+                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none resize-none"
+                    rows={4}
+                />
+            </div>
+>>>>>>> Stashed changes
 
             <button className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4">
           Update profile

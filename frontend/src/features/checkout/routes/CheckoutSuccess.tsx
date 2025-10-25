@@ -57,7 +57,7 @@ export const CheckoutSuccess = () => {
                 </div>
                 <div className="flex justify-between">
                     <h6 className="text-secondary text-lg">Shipping Address</h6>
-                    <p className="font-medium text-lg text-right">{sessionData.shippingAddress}<br />{sessionData.customer_details.address.country}</p>
+                    <p className="font-medium text-lg text-right">{sessionData.shippingAddress}</p>
                 </div>
             </div>
             <Link to="/dashboard" className="flex items-center mt-12 hover:underline">

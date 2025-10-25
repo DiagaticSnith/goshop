@@ -34,17 +34,7 @@ export const Dashboard = () => {
                     <h6 className="text-secondary">Total Revenue</h6>
                     <p className="font-semibold text-2xl">${data.totalRevenue.toFixed(2)}</p>
                 </div>
-                <div className="p-4 bg-white rounded-md drop-shadow-custom">
-                    <h6 className="text-secondary">Last 7 days</h6>
-                    <ul className="mt-2 text-sm text-secondary space-y-1">
-                        {data.statsByDay.map(s => (
-                            <li key={s.date} className="flex justify-between">
-                                <span>{s.date}</span>
-                                <span className="font-medium">{s.count} / ${s.revenue.toFixed(2)}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                {/* Removed the daily summary list as requested */}
             </div>
         );
     };
