@@ -15,12 +15,8 @@ model User {
   role       Role    @default(USER)
   status     UserStatus @default(ACTIVE)
   avatar     String?
-<<<<<<< Updated upstream
-  address    String?
   phoneNumber String?
-=======
   address    String? @db.Text
->>>>>>> Stashed changes
   Order      Order[]
   // A user can have one cart (optional)
   cart       Cart?

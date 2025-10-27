@@ -16,6 +16,7 @@ const userValidationSchema = yup.object({
     lastName: yup.string().required(fieldRequiredError).matches(/^[aA-zZ\s]+$/, "Name can only contain alphabets"),
     image: yup.mixed().nullable(),
     address: yup.string().optional(),
+    phone: yup.string().matches(/^[0-9+-]*$/).optional(),
 });
 export type UserFormType = yup.InferType<typeof userValidationSchema>;
 
@@ -33,6 +34,7 @@ const UserForm = () => {
             lastName: currentUser?.displayName?.split(" ")[1] || "",
             image: currentUser?.photoURL,
             address: "",
+            phone: "",
         }
     });
     const [preview, setPreview] = useState<string | ArrayBuffer | null | undefined>(currentUser?.photoURL);
@@ -46,6 +48,7 @@ const UserForm = () => {
                 lastName: currentUser?.displayName?.split(" ")[1] || "",
                 image: currentUser?.photoURL,
                 address: userData.address || "",
+                phone: userData.address || "",
             });
         }
     }, [userData, currentUser, reset]);
@@ -61,6 +64,7 @@ const UserForm = () => {
                 fullName,
                 avatar: data.image as Blob | string,
                 address: data.address || "",
+                phone: data.phone || "",
             }));
             await signInWithToken(token);
             currentUser?.reload();
@@ -138,8 +142,6 @@ const UserForm = () => {
                 </div>
             </div>
 
-<<<<<<< Updated upstream
-=======
             <div className="flex flex-col mb-3">
                 <label htmlFor="address" className="text-secondary">
             Shipping Address
@@ -152,7 +154,19 @@ const UserForm = () => {
                     rows={4}
                 />
             </div>
->>>>>>> Stashed changes
+
+             <div className="flex flex-col mb-3">
+                <label htmlFor="phone" className="text-secondary">
+            Phone Number
+                </label>
+                <textarea
+                    {...register("phone")}
+                    id="phone"
+                    placeholder="Enter your phone number"
+                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none resize-none"
+                    rows={4}
+                />
+            </div>
 
             <button className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4">
           Update profile

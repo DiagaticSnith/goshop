@@ -6,4 +6,5 @@ interface IUser {
     status?: "ACTIVE" | "HIDDEN";
     avatar?: string | Blob;
     address?: string;
+    phone?: string;
 }
