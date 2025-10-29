@@ -58,7 +58,7 @@ INSERT INTO Product (id, name, description, price, stockQuantity, image, categor
 ('p9', 'Wardrobe Cabinet', 'Spacious wardrobe with sliding doors.', 600, 10, 'https://m.media-amazon.com/images/I/7199dESj9vL._AC_SX679_.jpg', 5, 'price_1SFb1QHdUdWUYxJHWmg8aLkL', '2025-10-07 14:05:00.000', 1.44, 68.3, 29, 'FalsoBrand', 'Fabric'),
 ('prod_TDorMTMpXgCkEh', 'Lounge Chair', 'Comfortable lounge chair with ottoman.', 350, 12, 'https://m.media-amazon.com/images/I/611GbZz2MEL._AC_SX679_.jpg', 4, 'price_1SHNEDHdUdWUYxJHGU0tnQD4', '2025-10-07 14:05:00.000', 1.27, 126.1, 6.5, 'Initech', 'Leather');
 
-INSERT INTO User (firebaseId, email, fullName, role, avatar, status, address, phoneNumber) VALUES
-('3BK96oBpegZh9SMho181QEC3gca2', 'admin@gmail.com', 'admin system', 'ADMIN', NULL, 'ACTIVE', NULL, NULL),
-('EfiEnGvYqWON5CO8hnYFtNmOlCi2', 'locga123@gmail.com', 'loc ga', 'USER', NULL, 'ACTIVE', NULL, NULL),
-('sRG2HZiEXeN4dY9F4mfjuf5ZQjG3', 'asd@gmail.com', 'Diagatic sn', 'USER', NULL, 'ACTIVE', NULL, NULL);
+INSERT INTO User (firebaseId, email, fullName, role, avatar, status, address) VALUES
+('3BK96oBpegZh9SMho181QEC3gca2', 'admin@gmail.com', 'admin system', 'ADMIN', NULL, 'ACTIVE', NULL),
+('EfiEnGvYqWON5CO8hnYFtNmOlCi2', 'locga123@gmail.com', 'loc ga', 'USER', NULL, 'ACTIVE', NULL),
+('sRG2HZiEXeN4dY9F4mfjuf5ZQjG3', 'asd@gmail.com', 'Diagatic sn', 'USER', NULL, 'ACTIVE', NULL);

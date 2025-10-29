@@ -138,21 +138,6 @@ const UserForm = () => {
                 </div>
             </div>
 
-<<<<<<< Updated upstream
-=======
-            <div className="flex flex-col mb-3">
-                <label htmlFor="address" className="text-secondary">
-            Shipping Address
-                </label>
-                <textarea
-                    {...register("address")}
-                    id="address"
-                    placeholder="Enter your full shipping address (street, city, state, postal code, country)..."
-                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none resize-none"
-                    rows={4}
-                />
-            </div>
->>>>>>> Stashed changes
 
             <button className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4">
           Update profile
