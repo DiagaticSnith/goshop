@@ -51,8 +51,6 @@ export const webhook = async (req: Request, res: Response) => {
                     status: 'PENDING' as any,
                     createdAt: new Date(session.created * 1000)
                 },
-
-                return created;
             });
 
             // Clear user's cart after successful order creation

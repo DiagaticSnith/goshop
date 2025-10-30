@@ -14,7 +14,7 @@ export const getStatisticSummary = async (req: Request, res: Response) => {
         const totalUsers = await prisma.user.count();
 
         res.status(200).json({
-            totalRevenue: totalRevenue._sum.amout || 0,
+            totalRevenue: totalRevenue._sum.amount || 0,
             totalOrders,
             totalUsers,
         });
@@ -32,12 +32,12 @@ export const getSaleOverTime = async (reg: Request, res: Response) => {
                 amount: true,
             },
             orderBy: {
-                createAt: 'asc',
+                createdAt: 'asc',
             },
         });
 
         const formatSales = sales.map(sale => ({
-            date: sale.createAt.toISOString().split('T')[0],
+            date: sale.createdAt.toISOString().split('T')[0],
             sales: sale._sum.amount,
         }));
 

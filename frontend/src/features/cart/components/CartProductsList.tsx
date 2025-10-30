@@ -1,9 +1,5 @@
 import { useSelector } from "react-redux";
 import { selectCartItems } from "../cartSlice";
-<<<<<<< Updated upstream
-// Removed ProductQuantitySelectBox in favor of +/- controls
-=======
->>>>>>> Stashed changes
 import { Link } from "react-router-dom";
 import { RxCross1 } from "react-icons/rx";
 import { BsCartX } from "react-icons/bs";
@@ -14,10 +10,7 @@ import { FcCheckmark } from "react-icons/fc";
 import { addToCart, removeFromCart, setCart } from "../cartSlice";
 import { useAuth } from "../../../context/AuthContext";
 import * as cartApi from "../api";
-<<<<<<< Updated upstream
-=======
 import { toast } from "react-toastify";
->>>>>>> Stashed changes
 
 type Props = {
     context?: "cart" | "checkout";
@@ -54,10 +47,6 @@ type CartItemProp = {
 const CartProductView = (props: CartItemProp) => {
     const dispatch = useDispatch<AppDispatch>();
     const { token } = useAuth();
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
     const syncServerCart = useCallback(async () => {
         if (!token) return;
         try {
@@ -65,35 +54,6 @@ const CartProductView = (props: CartItemProp) => {
             const items = (serverCart.items || []).map((it: any) => ({ product: it.product as IProduct, quantity: it.totalQuantity }));
             dispatch(setCart(items));
         } catch (e) {
-<<<<<<< Updated upstream
-            console.error('Failed to sync cart from server', e);
-        }
-    }, [token, dispatch]);
-
-    const updateQuantity = async (newQuantity: number) => {
-        if (newQuantity <= 0) {
-            // remove if quantity goes to 0
-            dispatch(removeFromCart({ id: props.product.id }));
-            if (token) {
-                // find cart item id from latest server cart
-                try {
-                    const serverCart = await cartApi.getCart(token);
-                    const toRemove = (serverCart.items || []).find((it: any) => it.productId === props.product.id);
-                    if (toRemove) await cartApi.removeCartItem(token, toRemove.id);
-                    await syncServerCart();
-                } catch (e) { console.error('remove item failed', e); }
-            }
-            return;
-        }
-        // optimistic local update
-        dispatch(addToCart({ product: props.product, quantity: newQuantity }));
-        if (token) {
-            try {
-                await cartApi.addOrUpdateCartItem(token, props.product.id, newQuantity);
-                await syncServerCart();
-            } catch (e) {
-                console.error('update quantity failed', e);
-=======
             // ignore
         }
     }, [dispatch, token]);
@@ -110,23 +70,10 @@ const CartProductView = (props: CartItemProp) => {
                 await syncServerCart();
             } catch (e) {
                 toast.error("Unable to update cart on server");
->>>>>>> Stashed changes
             }
         }
     };
 
-<<<<<<< Updated upstream
-    const handleProductRemove = async () => {
-        dispatch(removeFromCart({ id: props.product.id }));
-        if (token) {
-            try {
-                const serverCart = await cartApi.getCart(token);
-                const toRemove = (serverCart.items || []).find((it: any) => it.productId === props.product.id);
-                if (toRemove) await cartApi.removeCartItem(token, toRemove.id);
-                await syncServerCart();
-            } catch (e) {
-                console.error('remove item failed', e);
-=======
     const handleDecrement = () => updateQuantity(props.quantity - 1);
     const handleIncrement = () => updateQuantity(props.quantity + 1);
 
@@ -144,7 +91,6 @@ const CartProductView = (props: CartItemProp) => {
                 await syncServerCart();
             } catch (e) {
                 toast.error("Unable to remove cart item on server");
->>>>>>> Stashed changes
             }
         }
     };
@@ -182,22 +128,6 @@ const CartProductView = (props: CartItemProp) => {
               ${props.product.price}
                     </h5>
                     {props.context === "cart" && (
-<<<<<<< Updated upstream
-                        <div className="inline-flex items-center border rounded-md overflow-hidden">
-                            <button
-                                className="px-3 py-2 text-lg"
-                                onClick={() => updateQuantity(props.quantity - 1)}
-                                aria-label="Decrease quantity"
-                            >
-                                -
-                            </button>
-                            <div className="px-4 select-none">{props.quantity}</div>
-                            <button
-                                className="px-3 py-2 text-lg"
-                                onClick={() => updateQuantity(props.quantity + 1)}
-                                aria-label="Increase quantity"
-                                disabled={props.quantity >= props.product.stockQuantity}
-=======
                         <div className="flex items-center space-x-3 select-none">
                             <button
                                 className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
@@ -213,7 +143,6 @@ const CartProductView = (props: CartItemProp) => {
                                 onClick={handleIncrement}
                                 disabled={props.quantity >= props.product.stockQuantity}
                                 aria-label="Increase quantity"
->>>>>>> Stashed changes
                             >
                                 +
                             </button>
