@@ -37,6 +37,43 @@ export const webhook = async (req: Request, res: Response) => {
         }));
 
         try {
+            // Use a transaction to create order and update stock atomically
+            order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+                // 1) Create order row first
+                const created = await tx.order.create({
+                    data: {
+                        amount: (session.amount_total || 0) / 100,
+                        userId: session.metadata?.customerId || "",
+                        items: JSON.stringify(items),
+                        country: session.customer_details?.address?.country || "",
+                        address: processOrderAddress(session.customer_details?.address as Stripe.Address | null),
+                        sessionId: session.id,
+                        createdAt: new Date(session.created * 1000)
+                    }
+                });
+
+                // 2) Decrement stock for each purchased item (non-negative)
+                for (const it of items) {
+                    const pid = it.product?.id as string | undefined;
+                    const qty = it.quantity || 0;
+                    if (!pid || qty <= 0) continue;
+
+                    // Try conditional decrement when enough stock
+                    const dec = await tx.product.updateMany({
+                        where: { id: pid, stockQuantity: { gte: qty } },
+                        data: { stockQuantity: { decrement: qty } }
+                    });
+
+                    if (dec.count === 0) {
+                        // Not enough stock: clamp to zero (avoid negative)
+                        const cur = await tx.product.findUnique({ where: { id: pid }, select: { stockQuantity: true } });
+                        if (cur && (cur.stockQuantity as number) > 0) {
+                            await tx.product.update({ where: { id: pid }, data: { stockQuantity: 0 } });
+                        }
+                    }
+                }
+
+                return created;
             order = await prisma.order.create({
                 data: {
                     amount: (session.amount_total || 0) / 100,

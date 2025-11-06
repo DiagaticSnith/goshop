@@ -54,43 +54,47 @@ const CartProductView = (props: CartItemProp) => {
             const items = (serverCart.items || []).map((it: any) => ({ product: it.product as IProduct, quantity: it.totalQuantity }));
             dispatch(setCart(items));
         } catch (e) {
-            // ignore
+            console.error('Failed to sync cart from server', e);
         }
-    }, [dispatch, token]);
+    }, [token, dispatch]);
 
-    const updateQuantity = async (nextQty: number) => {
-        if (nextQty < 1) return;
-        if (nextQty > props.product.stockQuantity) return;
-        // local update for instant UI feedback
-        dispatch(addToCart({ product: props.product, quantity: nextQty }));
-        // persist to server if logged in
+    const updateQuantity = async (newQuantity: number) => {
+        if (newQuantity <= 0) {
+            // remove if quantity goes to 0
+            dispatch(removeFromCart({ id: props.product.id }));
+            if (token) {
+                // find cart item id from latest server cart
+                try {
+                    const serverCart = await cartApi.getCart(token);
+                    const toRemove = (serverCart.items || []).find((it: any) => it.productId === props.product.id);
+                    if (toRemove) await cartApi.removeCartItem(token, toRemove.id);
+                    await syncServerCart();
+                } catch (e) { console.error('remove item failed', e); }
+            }
+            return;
+        }
+        // optimistic local update
+        dispatch(addToCart({ product: props.product, quantity: newQuantity }));
         if (token) {
             try {
-                await cartApi.addOrUpdateCartItem(token, props.product.id, nextQty);
+                await cartApi.addOrUpdateCartItem(token, props.product.id, newQuantity);
                 await syncServerCart();
             } catch (e) {
-                toast.error("Unable to update cart on server");
+                console.error('update quantity failed', e);
             }
         }
     };
 
-    const handleDecrement = () => updateQuantity(props.quantity - 1);
-    const handleIncrement = () => updateQuantity(props.quantity + 1);
-
     const handleProductRemove = async () => {
-        // local remove first
         dispatch(removeFromCart({ id: props.product.id }));
         if (token) {
             try {
-                // find server cart item id by product
                 const serverCart = await cartApi.getCart(token);
-                const item = (serverCart.items || []).find((it: any) => (it.product && it.product.id) === props.product.id);
-                if (item) {
-                    await cartApi.removeCartItem(token, item.id);
-                }
+                const toRemove = (serverCart.items || []).find((it: any) => it.productId === props.product.id);
+                if (toRemove) await cartApi.removeCartItem(token, toRemove.id);
                 await syncServerCart();
             } catch (e) {
-                toast.error("Unable to remove cart item on server");
+                console.error('remove item failed', e);
             }
         }
     };
@@ -128,21 +132,20 @@ const CartProductView = (props: CartItemProp) => {
               ${props.product.price}
                     </h5>
                     {props.context === "cart" && (
-                        <div className="flex items-center space-x-3 select-none">
+                        <div className="inline-flex items-center border rounded-md overflow-hidden">
                             <button
-                                className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
-                                onClick={handleDecrement}
-                                disabled={props.quantity <= 1}
+                                className="px-3 py-2 text-lg"
+                                onClick={() => updateQuantity(props.quantity - 1)}
                                 aria-label="Decrease quantity"
                             >
-                                −
+                                -
                             </button>
-                            <div className="min-w-[2ch] text-center font-medium">{props.quantity}</div>
+                            <div className="px-4 select-none">{props.quantity}</div>
                             <button
-                                className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
-                                onClick={handleIncrement}
-                                disabled={props.quantity >= props.product.stockQuantity}
+                                className="px-3 py-2 text-lg"
+                                onClick={() => updateQuantity(props.quantity + 1)}
                                 aria-label="Increase quantity"
+                                disabled={props.quantity >= props.product.stockQuantity}
                             >
                                 +
                             </button>

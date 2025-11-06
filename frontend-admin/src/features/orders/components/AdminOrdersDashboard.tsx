@@ -3,6 +3,8 @@ import { useAuth } from '../../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../app/api';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { toImageUrl } from '../../../utils/imageUrl';
+import React from 'react';
 import { OrderPreview } from './OrderPreview';
 
 type OrdersStats = { totalOrders: number; totalRevenue: number; statsByDay: { date: string; count: number; revenue: number }[] };
