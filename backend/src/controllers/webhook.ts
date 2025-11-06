@@ -74,22 +74,7 @@ export const webhook = async (req: Request, res: Response) => {
                 }
 
                 return created;
-            order = await prisma.order.create({
-                data: {
-                    amount: (session.amount_total || 0) / 100,
-                    userId: session.metadata?.customerId || "",
-                    items: JSON.stringify(items),
-                    country: session.customer_details?.address?.country || "",
-                    // Prefer the address user provided in metadata if present; fallback to Stripe normalized address
-                    address: (session.metadata?.address && session.metadata.address.trim().length > 0)
-                        ? session.metadata.address
-                        : processOrderAddress(session.customer_details?.address as Stripe.Address | null),
-                    sessionId: session.id,
-                    status: 'PENDING' as any,
-                    createdAt: new Date(session.created * 1000)
-                },
             });
-
             // Clear user's cart after successful order creation
             const userId = session.metadata?.customerId;
             if (userId) {
