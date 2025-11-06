@@ -15,6 +15,7 @@ model User {
   role       Role    @default(USER)
   status     UserStatus @default(ACTIVE)
   avatar     String?
+  phoneNumber String?
   address    String? @db.Text
   Order      Order[]
   // A user can have one cart (optional)

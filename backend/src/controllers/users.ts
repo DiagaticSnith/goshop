@@ -52,6 +52,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         const fullNameFromNames = `${firstName} ${lastName}`.trim();
         const newFullName = fullNameFromNames || (req.body.fullName || foundUser.fullName);
 
+        
         // Always ignore email updates via this endpoint for safety
         // Admin UI should not change email; if email provided, discard.
 
@@ -63,6 +64,10 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         };
         if (typeof req.body.address === 'string') {
             updateData.address = req.body.address;
+        } 
+
+        if (typeof req.body.phone == 'string') {
+            updateData.phone = req.body.phone;
         }
         const updatedUser = await prisma.user.update({
             where: { firebaseId: userId },
