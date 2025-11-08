@@ -21,7 +21,6 @@ export const Orders = () => {
                 <OrderPreview
                     key={order.id}
                     {...order}
-                    items={typeof order.items === "string" ? JSON.parse(order.items) : order.items}
                 />
             ));
         } else if (ordersAdmin && ordersAdmin?.length > 0) {
@@ -29,7 +28,6 @@ export const Orders = () => {
                 <OrderPreview
                     key={order.id}
                     {...order}
-                    items={typeof order.items === "string" ? JSON.parse(order.items) : order.items}
                 />
             ));
         }

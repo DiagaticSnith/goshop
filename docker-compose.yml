@@ -46,8 +46,6 @@ services:
     build:
       context: ./frontend-admin
       dockerfile: Dockerfile
-      args:
-        VITE_BACKEND_URL: "http://host.docker.internal:3000"
     ports:
       - "5174:80"
     depends_on:
