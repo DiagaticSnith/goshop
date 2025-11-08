@@ -3,12 +3,9 @@ import { useAuth } from '../../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../app/api';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-<<<<<<< Updated upstream
 import { toImageUrl } from '../../../utils/imageUrl';
 import React from 'react';
-=======
 import { OrderPreview } from './OrderPreview';
->>>>>>> Stashed changes
 
 type OrdersStats = { totalOrders: number; totalRevenue: number; statsByDay: { date: string; count: number; revenue: number }[] };
 type InventoryStats = { productsCount: number; totalStock: number; outOfStockCount: number; lowStockCount: number };
@@ -137,14 +134,6 @@ export default function AdminOrdersDashboard() {
         </select>
       </div>
 
-<<<<<<< Updated upstream
-      {/* Orders table with expandable details */}
-      {ordersQuery.data?.data?.length ? (
-        <OrdersTable orders={ordersQuery.data.data} />
-      ) : (
-        <div className="text-sm text-gray-600">No orders found.</div>
-      )}
-=======
       {/* Orders list using OrderPreview (same UI style as user app) */}
       <div className="mt-6">
         <h3 className="font-semibold text-lg mb-3">Orders</h3>
@@ -158,7 +147,6 @@ export default function AdminOrdersDashboard() {
           <div className="text-sm text-gray-600">No orders found.</div>
         )}
       </div>
->>>>>>> Stashed changes
     </div>
   );
 }

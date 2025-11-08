@@ -8,11 +8,14 @@ export const OrderPreview = (props: any) => {
   const [isShowInvoice, setIsShowInvoice] = useState<boolean>(false);
   const [status, setStatus] = useState<string>(props.status || "PENDING");
   const { token } = useAuth();
-  const items = Array.isArray(props.items)
-    ? props.items
-    : (() => {
-        try { return JSON.parse(props.items || "[]"); } catch { return []; }
-      })();
+  // Prefer new `details` relation (OrderDetails) returned by the API. Fallback to legacy `items` JSON.
+  const items = Array.isArray(props.details)
+    ? (props.details as any[]).map(d => ({ product: d.product, quantity: d.totalQuantity }))
+    : Array.isArray(props.items)
+      ? props.items
+      : (() => {
+          try { return JSON.parse(props.items || "[]"); } catch { return []; }
+        })();
 
   return (
     <>
@@ -117,7 +120,7 @@ export const OrderPreview = (props: any) => {
             <div className="text-secondary">Customer</div>
             <div className="font-semibold mb-2">{props.user?.fullName || props.user?.email || props.userId}</div>
             <div className="text-secondary">Shipping address</div>
-            <div className="font-medium whitespace-pre-wrap">{props.address || "(no address)"}</div>
+            <div className="font-medium whitespace-pre-wrap">{props.address || props.user?.address || "(no address)"}</div>
             {props.country && (
               <div className="text-secondary mt-1">
                 Country: <span className="font-medium">{props.country}</span>

@@ -215,7 +215,7 @@ export const AdminDashboard = () => {
                                     {!ordersLoading && ordersResp && ordersResp.data.length > 0 && (
                                         <div className="space-y-3">
                                             {ordersResp.data.map(order => (
-                                                <OrderPreview key={order.id} {...order} items={typeof order.items === 'string' ? JSON.parse(order.items) : order.items} />
+                                                <OrderPreview key={order.id} {...order} />
                                             ))}
 
                                             <div className="flex items-center justify-between">
