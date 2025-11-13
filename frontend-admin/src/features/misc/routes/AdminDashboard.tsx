@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "../../../components/Elements/Navbar";
 import AdminProducts from "../../../features/products/components/AdminProducts";
 import AdminOrdersDashboard from "../../../features/orders/components/AdminOrdersDashboard";
+import Overview from "../components/Overview";
 import { useAuth } from "../../../context/AuthContext";
 import AdminUsers from "../../../features/users/components/AdminUsers";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -26,12 +27,12 @@ export const AdminDashboard = () => {
 	}
 
 	const [params, setParams] = useSearchParams();
-	const tab = (params.get("tab") || "products").toLowerCase();
+	const tab = (params.get("tab") || "overview").toLowerCase();
 	// Ensure URL always has ?tab= for deep linking
 	React.useEffect(() => {
 		if (!params.get("tab")) {
 			const next = new URLSearchParams(params);
-			next.set("tab", "products");
+			next.set("tab", "overview");
 			setParams(next, { replace: true });
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,6 +54,9 @@ export const AdminDashboard = () => {
 
 				{/* Tabs */}
 				<div className="flex gap-2 mb-4">
+					<button className={`px-3 py-1 rounded ${isActive("overview")}`} onClick={() => setTab("overview")}>
+						Overview
+					</button>
 					<button className={`px-3 py-1 rounded ${isActive("products")}`} onClick={() => setTab("products")}>
 						Products
 					</button>
@@ -68,6 +72,11 @@ export const AdminDashboard = () => {
 				</div>
 
 				{/* Panel */}
+				{tab === "overview" && (
+					<section>
+						<Overview />
+					</section>
+				)}
 				{tab === "products" && (
 					<section>
 						<AdminProducts />

@@ -74,7 +74,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
             prisma.order.findMany({
                 where,
                 orderBy,
-                include: { user: true, details: { include: { product: true } } },
+                include: { user: true, details: { include: { product: { include: { category: true } } } } },
                 skip,
                 take
             }),
@@ -97,7 +97,8 @@ export const getOrdersByUserId = async (req: Request, res: Response) => {
             createdAt: "desc"
         },
         include: {
-            user: true
+            user: true,
+            details: { include: { product: { include: { category: true } } } }
         }
     });
     if (!orders) {
@@ -115,7 +116,7 @@ export const getOrderById = async (req: Request, res: Response) => {
         const p: any = prisma as any;
         const order = await p.order.findUnique({
             where: { id },
-            include: { user: true, details: { include: { product: true } } }
+            include: { user: true, details: { include: { product: { include: { category: true } } } } }
         });
         if (!order) return res.status(404).json({ message: 'Order not found' });
 

@@ -37,22 +37,25 @@ export const webhook = async (req: Request, res: Response) => {
         }));
 
         try {
-            // Use a transaction to create order and update stock atomically
-            order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-                // 1) Create order row first
+            // Use a transaction to create order, create order details and update stock atomically
+            const createdOrder = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+                // 1) Create order row first (do NOT store items JSON anymore)
+                // prefer address from Stripe customer_details; fall back to metadata.address (sent from frontend)
+                const computedAddress = processOrderAddress(session.customer_details?.address as Stripe.Address | null) || session.metadata?.address || "";
+
                 const created = await tx.order.create({
+                    // cast data to any to remain compatible until prisma client is regenerated
                     data: {
                         amount: (session.amount_total || 0) / 100,
                         userId: session.metadata?.customerId || "",
-                        items: JSON.stringify(items),
                         country: session.customer_details?.address?.country || "",
-                        address: processOrderAddress(session.customer_details?.address as Stripe.Address | null),
+                        address: computedAddress,
                         sessionId: session.id,
                         createdAt: new Date(session.created * 1000)
-                    }
+                    } as any
                 });
 
-                // 2) Decrement stock for each purchased item (non-negative)
+                // 2) Decrement stock for each purchased item and create OrderDetails row
                 for (const it of items) {
                     const pid = it.product?.id as string | undefined;
                     const qty = it.quantity || 0;
@@ -71,9 +74,26 @@ export const webhook = async (req: Request, res: Response) => {
                             await tx.product.update({ where: { id: pid }, data: { stockQuantity: 0 } });
                         }
                     }
+
+                    // Create OrderDetails entry linking to product
+                    const unitPrice = (it.product?.price as number) || 0;
+                    await tx.orderDetails.create({
+                        data: {
+                            orderId: created.id,
+                            productId: pid,
+                            totalQuantity: qty,
+                            totalPrice: unitPrice * qty
+                        }
+                    });
                 }
 
                 return created;
+            });
+
+            // Fetch the created order with details to return
+            order = await prisma.order.findUnique({
+                where: { id: createdOrder.id },
+                include: { details: { include: { product: { include: { category: true } } } }, user: true }
             });
             // Clear user's cart after successful order creation
             const userId = session.metadata?.customerId;

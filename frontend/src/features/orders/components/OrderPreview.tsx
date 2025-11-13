@@ -4,6 +4,12 @@ import { useState } from "react";
 
 export const OrderPreview = (props: IOrder) => {
     const [isShowInvoice, setIsShowInvoice] = useState<boolean>();
+    // Prefer OrderDetails relation when present, otherwise fall back to legacy items
+    const items = (props.details && props.details.length > 0)
+        ? props.details.map(d => ({ product: d.product, quantity: d.totalQuantity }))
+        : Array.isArray(props.items)
+            ? props.items
+            : (() => { try { return JSON.parse(props.items || '[]'); } catch { return []; } })();
 
     return (
         <>
@@ -56,56 +62,26 @@ export const OrderPreview = (props: IOrder) => {
                             </tr>
                         </thead>
                         <tbody>
-                                    {((props.details && props.details.length > 0)
-                                        ? props.details.map((d) => (
-                                            <tr
-                                                key={`detail-${d.id}`}
-                                                className="transition duration-300 ease-in-out hover:bg-neutral-100"
-                                            >
-                                                <td className="flex items-center px-4 py-3">
-                                                    <img
-                                                        src={d.product.image as string}
-                                                        alt="Product image"
-                                                        className="w-16 h-16 rounded-md object-cover mr-4"
-                                                    />
-                                                    <p className="font-bold">
-                                                        <Link to={`/products/${d.product.id}`}>
-                                                            {d.product.name}
-                                                        </Link>
-                                                    </p>
-                                                </td>
-                                                <td className="text-secondary px-4">
-                              ${(d.product.price * d.totalQuantity).toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        ))
-                                        : (props.items || []).map((item, idx) => (
-                                            <tr
-                                                key={`item-${idx}`}
-                                                className="transition duration-300 ease-in-out hover:bg-neutral-100"
-                                            >
-                                                <td className="flex items-center px-4 py-3">
-                                                    <img
-                                                        src={item.product.image as string}
-                                                        alt="Product image"
-                                                        className="w-16 h-16 rounded-md object-cover mr-4"
-                                                    />
-                                                    <p className="font-bold">
-                                                        <Link to={`/products/${item.product.id}`}>
-                                                            {item.product.name}
-                                                        </Link>
-                                                    </p>
-                                                </td>
-                                                <td className="text-secondary px-4">
-                              ${(item.product.price * item.quantity).toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        )))}
+                            {items.map((item: any, idx: number) => (
+                                <tr key={`item-${idx}`} className="transition duration-300 ease-in-out hover:bg-neutral-100">
+                                    <td className="flex items-center px-4 py-3">
+                                        <img src={item.product?.image as string} alt="Product image" className="w-16 h-16 rounded-md object-cover mr-4" />
+                                        <p className="font-bold">
+                                            <Link to={`/products/${item.product?.id}`}>
+                                                {item.product?.name}
+                                            </Link>
+                                        </p>
+                                    </td>
+                                    <td className="text-secondary px-4">
+                                        ${( (item.product?.price || 0) * (item.quantity || item.totalQuantity || 1) ).toFixed(2)}
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                     <div className="px-4 py-3 border-t-gray-200 border-t text-sm">
                         <div className="text-secondary">Shipping address</div>
-                        <div className="font-medium whitespace-pre-wrap">{props.address || "(no address)"}</div>
+                        <div className="font-medium whitespace-pre-wrap">{props.address || props.user?.address || "(no address)"}</div>
                         {props.country && (
                             <div className="text-secondary mt-1">
                                 Country: <span className="font-medium">{props.country}</span>

@@ -75,7 +75,6 @@ model Order {
   amount    Float
   userId    String
   user      User     @relation(fields: [userId], references: [firebaseId])
-  items     Json
   country   String
   address   String
   sessionId String   @unique

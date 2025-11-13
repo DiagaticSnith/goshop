@@ -10,7 +10,6 @@ import { FcCheckmark } from "react-icons/fc";
 import { addToCart, removeFromCart, setCart } from "../cartSlice";
 import { useAuth } from "../../../context/AuthContext";
 import * as cartApi from "../api";
-import { toast } from "react-toastify";
 
 type Props = {
     context?: "cart" | "checkout";

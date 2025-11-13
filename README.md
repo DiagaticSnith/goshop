@@ -143,5 +143,3 @@ Nếu gặp lỗi, kiểm tra logs:
 docker-compose logs -f backend
 docker-compose logs -f db
 ```
-
----
