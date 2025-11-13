@@ -95,7 +95,6 @@ export const webhook = async (req: Request, res: Response) => {
                 where: { id: createdOrder.id },
                 include: { details: { include: { product: { include: { category: true } } } }, user: true }
             });
-
             // Clear user's cart after successful order creation
             const userId = session.metadata?.customerId;
             if (userId) {
