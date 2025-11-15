@@ -54,6 +54,13 @@ export const createCheckoutSession = async (req: Request, res: Response, next: N
             return res.status(500).json({ message: 'Unable to validate stock' });
         }
 
+        // Log payload for debugging
+        console.log('[checkout] createCheckoutSession payload:', {
+            lineItems: rawLineItems,
+            email: req.body.email,
+            userId: req.body.userId
+        });
+
         const session = await stripe.checkout.sessions.create({
             success_url: successUrl,
             cancel_url: cancelUrl, // Tùy chọn, để user quay lại nếu hủy
@@ -74,7 +81,11 @@ export const createCheckoutSession = async (req: Request, res: Response, next: N
             url: session.url // Trả về URL đầy đủ
         });
     } catch (error: any) {
-        console.error("Checkout session error:", error.code, error.message, error.stack);
+        console.error("Checkout session error:", error?.code, error?.message);
+        // In development show error details to client for faster debugging
+        if (process.env.NODE_ENV !== 'production') {
+            return res.status(500).json({ message: "Unable to create the checkout session", error: error?.message, code: error?.code });
+        }
         next({ message: "Unable to create the checkout session", error });
     }
 };
