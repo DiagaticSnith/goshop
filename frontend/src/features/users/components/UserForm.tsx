@@ -42,13 +42,15 @@ const UserForm = () => {
     // Update form when userData is loaded
     useEffect(() => {
         if (userData) {
+            // Backend stores phone as `phoneNumber`; frontend uses `phone`.
+            const phoneVal = (userData as any).phone || (userData as any).phoneNumber || "";
             reset({
                 email: currentUser?.email || "",
                 firstName: currentUser?.displayName?.split(" ")[0] || "",
                 lastName: currentUser?.displayName?.split(" ")[1] || "",
                 image: currentUser?.photoURL,
                 address: userData.address || "",
-                phone: userData.address || "",
+                phone: phoneVal,
             });
         }
     }, [userData, currentUser, reset]);
