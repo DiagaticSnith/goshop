@@ -95,6 +95,10 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         res.status(200).json({ user: updatedUser, token });
     } catch (error) {
         console.error('[users] updateUser error:', error);
+        // If DEBUG_ERRORS=true in env, return the error details in the response for debugging.
+        if (process.env.DEBUG_ERRORS === 'true') {
+            return res.status(500).json({ message: "Unable to update the user", error: (error as any)?.message || error });
+        }
         if (process.env.NODE_ENV !== 'production') {
             return res.status(500).json({ message: "Unable to update the user", error: (error as any)?.message || error });
         }

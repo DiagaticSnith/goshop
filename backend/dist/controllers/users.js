@@ -102,6 +102,10 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
     catch (error) {
         console.error('[users] updateUser error:', error);
+        // If DEBUG_ERRORS=true in env, return the error details in the response for debugging.
+        if (process.env.DEBUG_ERRORS === 'true') {
+            return res.status(500).json({ message: "Unable to update the user", error: (error === null || error === void 0 ? void 0 : error.message) || error });
+        }
         if (process.env.NODE_ENV !== 'production') {
             return res.status(500).json({ message: "Unable to update the user", error: (error === null || error === void 0 ? void 0 : error.message) || error });
         }
