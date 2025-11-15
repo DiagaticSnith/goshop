@@ -7,9 +7,14 @@ const getDefaultBackend = () => {
   try {
     const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const runtimeDefault = `http://${host}:3000`;
-    if (typeof window !== "undefined" && host && host.startsWith("user-")) {
+    if (typeof window !== "undefined" && host && (host.startsWith("user-") || host.startsWith("admin-"))) {
       console.warn("[api] Forcing backend to https://backend-production-815c.up.railway.app (temporary)");
+      console.log("[api] Resolved baseURL -> https://backend-production-815c.up.railway.app");
       return "https://backend-production-815c.up.railway.app";
+    }
+    try {
+      console.log(`[api] Resolved baseURL -> ${runtimeDefault}`);
+    } catch (e) {
     }
     return runtimeDefault;
   } catch (e) {
