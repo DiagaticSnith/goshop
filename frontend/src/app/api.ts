@@ -4,8 +4,6 @@ import axios from "axios";
 // using the current hostname and the default backend port (3000). This ensures
 // API requests are sent to the backend service rather than the frontend host.
 const getBackendBaseUrl = () => {
-    // Support both VITE_API_URL (existing project setting) and VITE_BACKEND_URL.
-    // Prefer VITE_API_URL if present for backwards compatibility with your env vars.
     const env = (import.meta.env as any);
     const apiUrl = env.VITE_API_URL || env.VITE_BACKEND_URL;
     if (apiUrl) return apiUrl;
@@ -13,6 +11,10 @@ const getBackendBaseUrl = () => {
     if (typeof window !== 'undefined' && window.location) {
         const protocol = window.location.protocol || 'http:';
         const hostname = window.location.hostname || 'localhost';
+        if (hostname.startsWith('user-')) {
+            const backendHost = hostname.replace(/^user-/, 'backend-');
+            return `${protocol}//${backendHost}`;
+        }
         return `${protocol}//${hostname}:3000`;
     }
     return 'http://localhost:3000';
