@@ -10,4 +10,6 @@ router.get("/", (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), o
 router.get("/user/:id", orders_1.getOrdersByUserId);
 router.get("/stats", (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), orders_1.getOrdersStats);
 router.get("/:id", orders_1.getOrderById);
+router.post("/:id/confirm", (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), orders_1.confirmOrder);
+router.post("/:id/reject", (0, verifyRolesMiddleware_1.verifyRolesMiddleware)(["ADMIN"]), orders_1.rejectOrder);
 exports.default = router;

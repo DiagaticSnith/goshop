@@ -71,14 +71,24 @@ const createCheckoutSession = (req, res, next) => __awaiter(void 0, void 0, void
             console.error('Stock validation failed', e);
             return res.status(500).json({ message: 'Unable to validate stock' });
         }
+        // Log payload for debugging
+        console.log('[checkout] createCheckoutSession payload:', {
+            lineItems: rawLineItems,
+            email: req.body.email,
+            userId: req.body.userId
+        });
         const session = yield stripe_1.default.checkout.sessions.create({
             success_url: successUrl,
             cancel_url: cancelUrl,
             mode: "payment",
             line_items: rawLineItems,
             currency: "usd",
+            // Do NOT collect address in Stripe Checkout; we use the user's typed address only
+            customer_email: req.body.email || undefined,
             metadata: {
-                customerId: req.body.userId
+                customerId: req.body.userId || "",
+                // Also store the address user typed (free-form) so webhook can fallback
+                address: (req.body.address || "").toString().slice(0, 500)
             }
         });
         res.status(201).json({
@@ -87,7 +97,11 @@ const createCheckoutSession = (req, res, next) => __awaiter(void 0, void 0, void
         });
     }
     catch (error) {
-        console.error("Checkout session error:", error.code, error.message, error.stack);
+        console.error("Checkout session error:", error === null || error === void 0 ? void 0 : error.code, error === null || error === void 0 ? void 0 : error.message);
+        // In development show error details to client for faster debugging
+        if (process.env.NODE_ENV !== 'production') {
+            return res.status(500).json({ message: "Unable to create the checkout session", error: error === null || error === void 0 ? void 0 : error.message, code: error === null || error === void 0 ? void 0 : error.code });
+        }
         next({ message: "Unable to create the checkout session", error });
     }
 });

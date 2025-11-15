@@ -85,8 +85,9 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         } catch (fbErr) {
             console.error('[users] firebase updateUser failed:', fbErr);
             // continue — we still return updatedUser, but surface error in non-prod
+            const fbErrAny = fbErr as any;
             if (process.env.NODE_ENV !== 'production') {
-                return res.status(500).json({ message: 'Firebase update failed', error: fbErr?.message || fbErr });
+                return res.status(500).json({ message: 'Firebase update failed', error: fbErrAny?.message || fbErrAny });
             }
         }
         const token = await auth.createCustomToken(userId);

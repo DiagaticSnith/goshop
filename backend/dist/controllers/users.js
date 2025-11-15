@@ -64,24 +64,47 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         // Always ignore email updates via this endpoint for safety
         // Admin UI should not change email; if email provided, discard.
         const image = req.image || req.body.avatar;
+        // Log incoming update for debugging
+        console.log('[users] updateUser called:', { userId, requesterId, requesterRole, body: req.body, hasImage: !!req.image });
+        // Build update payload dynamically to avoid touching unknown fields
+        const updateData = {
+            fullName: newFullName,
+            avatar: image || foundUser.avatar
+        };
+        if (typeof req.body.address === 'string') {
+            updateData.address = req.body.address;
+        }
+        if (typeof req.body.phone == 'string') {
+            updateData.phone = req.body.phone;
+        }
         const updatedUser = yield prisma_client_1.default.user.update({
-            where: {
-                firebaseId: userId
-            },
-            data: {
-                fullName: newFullName,
-                avatar: image || foundUser.avatar
-            }
+            where: { firebaseId: userId },
+            data: updateData
         });
         // Update Firebase displayName/photo only (do not modify email here)
-        yield firebase_1.auth.updateUser(userId || "", {
-            displayName: newFullName,
-            photoURL: image || undefined
-        });
+        try {
+            console.log('[users] updating firebase auth profile for', userId);
+            yield firebase_1.auth.updateUser(userId || "", {
+                displayName: newFullName,
+                photoURL: image || undefined
+            });
+        }
+        catch (fbErr) {
+            console.error('[users] firebase updateUser failed:', fbErr);
+            // continue — we still return updatedUser, but surface error in non-prod
+            const fbErrAny = fbErr;
+            if (process.env.NODE_ENV !== 'production') {
+                return res.status(500).json({ message: 'Firebase update failed', error: (fbErrAny === null || fbErrAny === void 0 ? void 0 : fbErrAny.message) || fbErrAny });
+            }
+        }
         const token = yield firebase_1.auth.createCustomToken(userId);
         res.status(200).json({ user: updatedUser, token });
     }
     catch (error) {
+        console.error('[users] updateUser error:', error);
+        if (process.env.NODE_ENV !== 'production') {
+            return res.status(500).json({ message: "Unable to update the user", error: (error === null || error === void 0 ? void 0 : error.message) || error });
+        }
         next({ message: "Unable to update the user", error });
     }
 });
