@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../app/api";
 import { toast } from "react-toastify";
+import { useQueryClient } from '@tanstack/react-query';
 
 export const OrderPreview = (props: any) => {
   const [isShowInvoice, setIsShowInvoice] = useState<boolean>(false);
   const [status, setStatus] = useState<string>(props.status || "PENDING");
   const { token } = useAuth();
+  const queryClient = useQueryClient();
   // Prefer new `details` relation (OrderDetails) returned by the API. Fallback to legacy `items` JSON.
   const items = Array.isArray(props.details)
     ? (props.details as any[]).map(d => ({ product: d.product, quantity: d.totalQuantity }))
@@ -48,6 +50,14 @@ export const OrderPreview = (props: any) => {
                     setStatus('CONFIRMED');
                     toast.success('Order confirmed');
                     if (typeof props.onRefresh === 'function') await props.onRefresh();
+                    // Ensure dashboard/overview/statistic queries are refreshed so charts update
+                    try {
+                      await queryClient.invalidateQueries(['orders']);
+                      await queryClient.invalidateQueries(['overview']);
+                      await queryClient.invalidateQueries(['statistic']);
+                    } catch (err) {
+                      // ignore cache invalidation errors
+                    }
                   } catch (e) {
                     toast.error('Unable to confirm order');
                   }
@@ -63,6 +73,14 @@ export const OrderPreview = (props: any) => {
                     setStatus('REJECTED');
                     toast.success('Order rejected and refunded');
                     if (typeof props.onRefresh === 'function') await props.onRefresh();
+                    // Ensure dashboard/overview/statistic queries are refreshed so charts update
+                    try {
+                      await queryClient.invalidateQueries(['orders']);
+                      await queryClient.invalidateQueries(['overview']);
+                      await queryClient.invalidateQueries(['statistic']);
+                    } catch (err) {
+                      // ignore cache invalidation errors
+                    }
                   } catch (e) {
                     toast.error('Unable to reject order');
                   }
