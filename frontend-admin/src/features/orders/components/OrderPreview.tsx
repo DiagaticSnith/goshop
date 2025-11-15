@@ -47,6 +47,7 @@ export const OrderPreview = (props: any) => {
                     await api.post(`/orders/${props.id}/confirm`, undefined, { headers: { Authorization: `Bearer ${token}` } });
                     setStatus('CONFIRMED');
                     toast.success('Order confirmed');
+                    if (typeof props.onRefresh === 'function') await props.onRefresh();
                   } catch (e) {
                     toast.error('Unable to confirm order');
                   }
@@ -61,6 +62,7 @@ export const OrderPreview = (props: any) => {
                     await api.post(`/orders/${props.id}/reject`, undefined, { headers: { Authorization: `Bearer ${token}` } });
                     setStatus('REJECTED');
                     toast.success('Order rejected and refunded');
+                    if (typeof props.onRefresh === 'function') await props.onRefresh();
                   } catch (e) {
                     toast.error('Unable to reject order');
                   }
