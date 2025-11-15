@@ -3,6 +3,7 @@
     "build": "npx tsc",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "server": "npx nodemon",
+    "seed:sql": "node seed-data.js",
     "seed": "npx tsc && node dist/seed.js",
     "set-admin": "npx tsc && node dist/scripts/setAdminRole.js"
   },

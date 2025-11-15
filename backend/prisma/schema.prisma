@@ -82,6 +82,7 @@ model Order {
   createdAt DateTime @default(now())
   // opposite relation for OrderDetails
   details   OrderDetails[]
+  @@map("orders")
 }
 
 enum OrderStatus {
