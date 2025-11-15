@@ -68,8 +68,11 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
             updateData.address = req.body.address;
         } 
 
+        // Prisma schema uses `phoneNumber` (not `phone`). Map accordingly.
         if (typeof req.body.phone == 'string') {
-            updateData.phone = req.body.phone;
+            // convert empty string to null to avoid Prisma validation errors
+            const phoneVal = req.body.phone.trim();
+            updateData.phoneNumber = phoneVal === '' ? null : phoneVal;
         }
         const updatedUser = await prisma.user.update({
             where: { firebaseId: userId },

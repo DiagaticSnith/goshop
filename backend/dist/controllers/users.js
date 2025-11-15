@@ -74,8 +74,11 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         if (typeof req.body.address === 'string') {
             updateData.address = req.body.address;
         }
+        // Prisma schema uses `phoneNumber` (not `phone`). Map accordingly.
         if (typeof req.body.phone == 'string') {
-            updateData.phone = req.body.phone;
+            // convert empty string to null to avoid Prisma validation errors
+            const phoneVal = req.body.phone.trim();
+            updateData.phoneNumber = phoneVal === '' ? null : phoneVal;
         }
         const updatedUser = yield prisma_client_1.default.user.update({
             where: { firebaseId: userId },
