@@ -52,6 +52,8 @@ app.use("/checkout", checkoutRoutes);
 app.use("/cart", cartRoutes);
 app.use("/auth", authRoutes);
 app.use("/category", categoryRoutes);
+// Support both singular and plural category routes for compatibility with frontend bundles
+app.use("/categories", categoryRoutes);
 
 app.use(errorMiddleware);
 

@@ -153,7 +153,7 @@ const createProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 });
 exports.createProduct = createProduct;
 const updateProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f;
     try {
         const foundProduct = yield prisma_client_1.default.product.findFirst({
             where: {
@@ -163,64 +163,78 @@ const updateProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         if (!foundProduct) {
             return res.status(404).json({ message: "Product not found" });
         }
-        try {
-            yield stripe_1.default.products.update(foundProduct.id, {
-                active: false
-            });
-        }
-        catch (err) {
-            // If the Stripe product was already deleted/doesn't exist, don't fail the whole request.
-            // Log and continue to create a new Stripe product below.
-            if (err && (err.type === 'StripeInvalidRequestError' || ((_a = err.raw) === null || _a === void 0 ? void 0 : _a.code) === 'resource_missing')) {
-                console.warn(`Stripe product not found when attempting to deactivate id=${foundProduct.id}, continuing to recreate:`, err.message || err);
-            }
-            else {
-                // rethrow unknown Stripe errors so they can be handled by error middleware
-                throw err;
-            }
-        }
         const image = req.image || foundProduct.image || undefined;
         // For DB write, ensure non-null image value
         const imageForDb = req.image || foundProduct.image || "";
-        const updatedStripePayload = {
-            name: ((_b = req.body) === null || _b === void 0 ? void 0 : _b.name) || foundProduct.name,
-            description: ((_c = req.body) === null || _c === void 0 ? void 0 : _c.description) || foundProduct.description,
-            default_price_data: {
-                currency: "usd",
-                unit_amount: Math.round((((_d = req.body) === null || _d === void 0 ? void 0 : _d.price) || foundProduct.price) * 100)
+        let stripeProductId = foundProduct.id;
+        let newPriceId = undefined;
+        // Try to update existing Stripe product metadata
+        try {
+            const updatePayload = {
+                name: ((_a = req.body) === null || _a === void 0 ? void 0 : _a.name) || foundProduct.name,
+                description: ((_b = req.body) === null || _b === void 0 ? void 0 : _b.description) || foundProduct.description
+            };
+            if (image && isUrl(image))
+                updatePayload.images = [image];
+            yield stripe_1.default.products.update(foundProduct.id, updatePayload);
+        }
+        catch (err) {
+            // If the Stripe product is missing, create a new one and we'll update DB id below.
+            if (err && (err.type === 'StripeInvalidRequestError' || ((_c = err.raw) === null || _c === void 0 ? void 0 : _c.code) === 'resource_missing')) {
+                console.warn(`Stripe product not found when attempting to update id=${foundProduct.id}, recreating product:`, err.message || err);
+                const createdStripeProduct = yield stripe_1.default.products.create(Object.assign({ name: ((_d = req.body) === null || _d === void 0 ? void 0 : _d.name) || foundProduct.name, description: ((_e = req.body) === null || _e === void 0 ? void 0 : _e.description) || foundProduct.description, default_price_data: {
+                        currency: 'usd',
+                        unit_amount: Math.round((((_f = req.body) === null || _f === void 0 ? void 0 : _f.price) || foundProduct.price) * 100)
+                    } }, (image && isUrl(image) ? { images: [image] } : {})));
+                stripeProductId = createdStripeProduct.id;
+                newPriceId = createdStripeProduct.default_price;
             }
-        };
-        if (image && isUrl(image))
-            updatedStripePayload.images = [image];
-        const updatedStripeProduct = yield stripe_1.default.products.create(updatedStripePayload);
-        const updatedProduct = yield prisma_client_1.default.product.update({
-            where: {
-                id: req.params.id
-            },
-            data: {
-                stockQuantity: Number(req.body.stockQuantity),
-                price: Number(req.body.price),
-                id: updatedStripeProduct.id,
-                priceId: updatedStripeProduct.default_price,
-                image: imageForDb,
-                name: req.body.name,
-                description: req.body.description,
-                weight: req.body.weight ? Number(req.body.weight) : undefined,
-                width: req.body.width ? Number(req.body.width) : undefined,
-                height: req.body.height ? Number(req.body.height) : undefined,
-                brand: req.body.brand || undefined,
-                material: req.body.material || undefined,
-                category: {
-                    connectOrCreate: {
-                        where: {
-                            name: req.body.category
-                        },
-                        create: {
-                            name: req.body.category
-                        }
-                    }
+            else {
+                throw err;
+            }
+        }
+        // If price changed (or we created a new product), create a new Price for the stripe product
+        try {
+            const requestedPrice = Number(req.body.price || foundProduct.price);
+            if (newPriceId === undefined && requestedPrice !== Number(foundProduct.price)) {
+                const priceObj = yield stripe_1.default.prices.create({
+                    product: stripeProductId,
+                    unit_amount: Math.round(requestedPrice * 100),
+                    currency: 'usd'
+                });
+                newPriceId = priceObj.id;
+            }
+        }
+        catch (err) {
+            // if price create fails for unexpected reasons, rethrow to middleware
+            throw err;
+        }
+        // Prepare DB update data; only change product id in DB if we recreated the Stripe product
+        const dbUpdateData = {
+            stockQuantity: Number(req.body.stockQuantity),
+            price: Number(req.body.price),
+            image: imageForDb,
+            name: req.body.name,
+            description: req.body.description,
+            weight: req.body.weight ? Number(req.body.weight) : undefined,
+            width: req.body.width ? Number(req.body.width) : undefined,
+            height: req.body.height ? Number(req.body.height) : undefined,
+            brand: req.body.brand || undefined,
+            material: req.body.material || undefined,
+            category: {
+                connectOrCreate: {
+                    where: { name: req.body.category },
+                    create: { name: req.body.category }
                 }
             }
+        };
+        if (newPriceId)
+            dbUpdateData.priceId = newPriceId;
+        if (stripeProductId !== foundProduct.id)
+            dbUpdateData.id = stripeProductId;
+        const updatedProduct = yield prisma_client_1.default.product.update({
+            where: { id: req.params.id },
+            data: dbUpdateData
         });
         res.status(200).json(updatedProduct);
     }
@@ -243,7 +257,7 @@ const deleteProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         try {
             yield stripe_1.default.products.update(req.params.id, { active: false });
         }
-        catch (_e) { }
+        catch (_g) { }
         res.status(200).json(updated);
     }
     catch (error) {
@@ -268,7 +282,7 @@ const setProductStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, f
                 yield stripe_1.default.products.update(req.params.id, { active: false });
             }
         }
-        catch (_f) { }
+        catch (_h) { }
         res.status(200).json(updated);
     }
     catch (error) {

@@ -55,6 +55,8 @@ app.use("/checkout", checkout_1.default);
 app.use("/cart", cart_1.default);
 app.use("/auth", auth_1.default);
 app.use("/category", category_1.default);
+// Support both singular and plural category routes for compatibility with frontend bundles
+app.use("/categories", category_1.default);
 app.use(errorMiddleware_1.errorMiddleware);
 app.listen({ address: "0.0.0.0", port: PORT }, () => {
     console.log(`Server running on port: ${PORT}`);
