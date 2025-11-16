@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,9 +26,44 @@ const category_1 = __importDefault(require("./routes/category"));
 const cart_1 = __importDefault(require("./routes/cart"));
 const webhook_1 = require("./controllers/webhook");
 const path_1 = __importDefault(require("path"));
+const prom_client_1 = __importDefault(require("prom-client"));
 const cloudinary_1 = require("cloudinary");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
+// Prometheus metrics setup
+const register = new prom_client_1.default.Registry();
+prom_client_1.default.collectDefaultMetrics({ register });
+const httpRequestCounter = new prom_client_1.default.Counter({
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests',
+    labelNames: ['method', 'route', 'status'],
+    registers: [register]
+});
+// Middleware to count requests and label by method/route/status
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        var _a;
+        try {
+            const route = ((_a = req.route) === null || _a === void 0 ? void 0 : _a.path) || req.path || 'unknown';
+            httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) }, 1);
+        }
+        catch (e) {
+            // ignore metric errors
+        }
+    });
+    next();
+});
+// Expose Prometheus metrics
+app.get('/metrics', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        res.set('Content-Type', register.contentType || 'text/plain; version=0.0.4');
+        const metrics = yield register.metrics();
+        res.send(metrics);
+    }
+    catch (err) {
+        res.status(500).send((err === null || err === void 0 ? void 0 : err.message) || 'unable to collect metrics');
+    }
+}));
 // Build allowed origins from environment or default dev hosts
 const defaultAllowed = ["http://localhost:5173", "http://localhost:4173"];
 const devAdminHosts = ["http://localhost:5174", "http://host.docker.internal:5174"];
