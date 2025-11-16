@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rejectOrder = exports.confirmOrder = exports.getOrdersStats = exports.getOrderById = exports.getOrdersByUserId = exports.getAllOrders = void 0;
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
+const metrics_1 = require("../utils/metrics");
 const stripe_1 = __importDefault(require("../config/stripe"));
 const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // Support query params for admin listing: search, sort, from, to, page, pageSize
@@ -201,6 +202,10 @@ const confirmOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (order.status === 'REJECTED')
             return res.status(400).json({ message: 'Cannot confirm a rejected order' });
         const updated = yield prisma_client_1.default.order.update({ where: { id }, data: { status: 'CONFIRMED' } });
+        try {
+            metrics_1.ordersConfirmedCounter.inc({ source: 'admin' });
+        }
+        catch (e) { }
         return res.json(updated);
     }
     catch (error) {
@@ -235,6 +240,10 @@ const rejectOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             console.error('Stripe refund failed for order', id, e);
         }
         const updated = yield prisma_client_1.default.order.update({ where: { id }, data: { status: 'REJECTED' } });
+        try {
+            metrics_1.ordersRejectedCounter.inc({ source: 'admin' });
+        }
+        catch (e) { }
         return res.json(updated);
     }
     catch (error) {

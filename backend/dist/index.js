@@ -26,44 +26,64 @@ const category_1 = __importDefault(require("./routes/category"));
 const cart_1 = __importDefault(require("./routes/cart"));
 const webhook_1 = require("./controllers/webhook");
 const path_1 = __importDefault(require("path"));
-const prom_client_1 = __importDefault(require("prom-client"));
+const metrics_1 = require("./utils/metrics");
 const cloudinary_1 = require("cloudinary");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
-// Prometheus metrics setup
-const register = new prom_client_1.default.Registry();
-prom_client_1.default.collectDefaultMetrics({ register });
-const httpRequestCounter = new prom_client_1.default.Counter({
-    name: 'http_requests_total',
-    help: 'Total number of HTTP requests',
-    labelNames: ['method', 'route', 'status'],
-    registers: [register]
-});
 // Middleware to count requests and label by method/route/status
 app.use((req, res, next) => {
+    // track in-flight
+    try {
+        metrics_1.inFlightRequests.inc();
+    }
+    catch (e) { }
+    const start = Date.now();
     res.on('finish', () => {
         var _a;
+        const duration = (Date.now() - start) / 1000;
+        const route = ((_a = req.route) === null || _a === void 0 ? void 0 : _a.path) || req.path || 'unknown';
         try {
-            const route = ((_a = req.route) === null || _a === void 0 ? void 0 : _a.path) || req.path || 'unknown';
-            httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) }, 1);
+            metrics_1.httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) });
+            metrics_1.httpRequestDuration.observe({ method: req.method, route, status: String(res.statusCode) }, duration);
         }
         catch (e) {
-            // ignore metric errors
+            // ignore
         }
+        try {
+            metrics_1.inFlightRequests.dec();
+        }
+        catch (e) { }
     });
     next();
 });
 // Expose Prometheus metrics
 app.get('/metrics', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        res.set('Content-Type', register.contentType || 'text/plain; version=0.0.4');
-        const metrics = yield register.metrics();
+        res.set('Content-Type', metrics_1.register.contentType || 'text/plain; version=0.0.4');
+        const metrics = yield metrics_1.register.metrics();
         res.send(metrics);
     }
     catch (err) {
         res.status(500).send((err === null || err === void 0 ? void 0 : err.message) || 'unable to collect metrics');
     }
 }));
+// Accept lightweight frontend telemetry via POST or navigator.sendBeacon
+app.post('/metrics/events', (req, res) => {
+    try {
+        const body = req.body || {};
+        const event = typeof body.event === 'string' ? body.event : req.query.event;
+        const page = typeof body.page === 'string' ? body.page : req.query.page;
+        const ua = req.headers['user-agent'] || 'unknown';
+        if (!event)
+            return res.status(400).json({ message: 'missing event' });
+        (0, metrics_1.recordFrontendEvent)(event, { page, userAgent: String(ua) });
+        // Accept both beacon and normal posts; respond quickly
+        return res.status(204).end();
+    }
+    catch (e) {
+        return res.status(500).json({ message: 'unable to record event' });
+    }
+});
 // Build allowed origins from environment or default dev hosts
 const defaultAllowed = ["http://localhost:5173", "http://localhost:4173"];
 const devAdminHosts = ["http://localhost:5174", "http://host.docker.internal:5174"];

@@ -49,6 +49,15 @@ export const OrderPreview = (props: any) => {
                     await api.post(`/orders/${props.id}/confirm`, undefined, { headers: { Authorization: `Bearer ${token}` } });
                     setStatus('CONFIRMED');
                     toast.success('Order confirmed');
+                    // send lightweight telemetry to backend
+                    try {
+                      const payload = JSON.stringify({ event: 'order_confirmed', page: 'admin_orders' });
+                      if (navigator.sendBeacon) {
+                        navigator.sendBeacon('/metrics/events', payload);
+                      } else {
+                        fetch('/metrics/events', { method: 'POST', body: payload, headers: { 'Content-Type': 'application/json' } });
+                      }
+                    } catch (e) {}
                     if (typeof props.onRefresh === 'function') await props.onRefresh();
                     // Ensure dashboard/overview/statistic queries are refreshed so charts update
                     try {

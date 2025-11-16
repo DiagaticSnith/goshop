@@ -13,30 +13,17 @@ import cartRoutes from "./routes/cart";
 import { webhook } from "./controllers/webhook";
 import path from "path";
 import client from 'prom-client';
+import { register, httpRequestCounter, httpRequestDuration, frontendEventsCounter, recordFrontendEvent, inFlightRequests } from './utils/metrics';
 import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Prometheus metrics setup
-const register = new client.Registry();
-client.collectDefaultMetrics({ register });
-const httpRequestCounter = new client.Counter({
-    name: 'http_requests_total',
-    help: 'Total number of HTTP requests',
-    labelNames: ['method', 'route', 'status'],
-    registers: [register]
-});
-const httpRequestDuration = new client.Histogram({
-    name: 'http_request_duration_seconds',
-    help: 'Duration of HTTP requests in seconds',
-    labelNames: ['method', 'route', 'status'],
-    buckets: [0.1, 0.3, 0.5, 1, 2, 5, 10], // p95, p99
-    registers: [register]
-});
-
 // Middleware to count requests and label by method/route/status
 app.use((req, res, next) => {
+    // track in-flight
+    try { inFlightRequests.inc(); } catch (e) {}
+
     const start = Date.now();
 
     res.on('finish', () => {
@@ -48,6 +35,7 @@ app.use((req, res, next) => {
         } catch (e) {
             // ignore
         }
+        try { inFlightRequests.dec(); } catch (e) {}
     });
     next();
 });
@@ -60,6 +48,22 @@ app.get('/metrics', async (req, res) => {
         res.send(metrics);
     } catch (err: any) {
         res.status(500).send(err?.message || 'unable to collect metrics');
+    }
+});
+
+// Accept lightweight frontend telemetry via POST or navigator.sendBeacon
+app.post('/metrics/events', (req, res) => {
+    try {
+        const body = req.body || {};
+        const event = typeof body.event === 'string' ? body.event : (req.query.event as string | undefined);
+        const page = typeof body.page === 'string' ? body.page : (req.query.page as string | undefined);
+        const ua = req.headers['user-agent'] || 'unknown';
+        if (!event) return res.status(400).json({ message: 'missing event' });
+        recordFrontendEvent(event, { page, userAgent: String(ua) });
+        // Accept both beacon and normal posts; respond quickly
+        return res.status(204).end();
+    } catch (e) {
+        return res.status(500).json({ message: 'unable to record event' });
     }
 });
 
