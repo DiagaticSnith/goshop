@@ -27,15 +27,26 @@ const httpRequestCounter = new client.Counter({
     labelNames: ['method', 'route', 'status'],
     registers: [register]
 });
+const httpRequestDuration = new client.Histogram({
+    name: 'http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
+    labelNames: ['method', 'route', 'status'],
+    buckets: [0.1, 0.3, 0.5, 1, 2, 5, 10], // p95, p99
+    registers: [register]
+});
 
 // Middleware to count requests and label by method/route/status
 app.use((req, res, next) => {
+    const start = Date.now();
+
     res.on('finish', () => {
+        const duration = (Date.now() - start) / 1000;
+        const route = (req as any).route?.path || req.path || 'unknown';
         try {
-            const route = (req as any).route?.path || req.path || 'unknown';
-            httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) }, 1);
+            httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) });
+            httpRequestDuration.observe({ method: req.method, route, status: String(res.statusCode) }, duration);
         } catch (e) {
-            // ignore metric errors
+            // ignore
         }
     });
     next();
