@@ -12,10 +12,45 @@ import categoryRoutes from "./routes/category";
 import cartRoutes from "./routes/cart";
 import { webhook } from "./controllers/webhook";
 import path from "path";
+import client from 'prom-client';
 import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Prometheus metrics setup
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+const httpRequestCounter = new client.Counter({
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests',
+    labelNames: ['method', 'route', 'status'],
+    registers: [register]
+});
+
+// Middleware to count requests and label by method/route/status
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        try {
+            const route = (req as any).route?.path || req.path || 'unknown';
+            httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) }, 1);
+        } catch (e) {
+            // ignore metric errors
+        }
+    });
+    next();
+});
+
+// Expose Prometheus metrics
+app.get('/metrics', async (req, res) => {
+    try {
+        res.set('Content-Type', (register as any).contentType || 'text/plain; version=0.0.4');
+        const metrics = await register.metrics();
+        res.send(metrics);
+    } catch (err: any) {
+        res.status(500).send(err?.message || 'unable to collect metrics');
+    }
+});
 
 // Build allowed origins from environment or default dev hosts
 const defaultAllowed = ["http://localhost:5173", "http://localhost:4173"];
