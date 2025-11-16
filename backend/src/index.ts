@@ -12,10 +12,60 @@ import categoryRoutes from "./routes/category";
 import cartRoutes from "./routes/cart";
 import { webhook } from "./controllers/webhook";
 import path from "path";
+import client from 'prom-client';
+import { register, httpRequestCounter, httpRequestDuration, frontendEventsCounter, recordFrontendEvent, inFlightRequests } from './utils/metrics';
 import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Middleware to count requests and label by method/route/status
+app.use((req, res, next) => {
+    // track in-flight
+    try { inFlightRequests.inc(); } catch (e) {}
+
+    const start = Date.now();
+
+    res.on('finish', () => {
+        const duration = (Date.now() - start) / 1000;
+        const route = (req as any).route?.path || req.path || 'unknown';
+        try {
+            httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) });
+            httpRequestDuration.observe({ method: req.method, route, status: String(res.statusCode) }, duration);
+        } catch (e) {
+            // ignore
+        }
+        try { inFlightRequests.dec(); } catch (e) {}
+    });
+    next();
+});
+
+// Expose Prometheus metrics
+app.get('/metrics', async (req, res) => {
+    try {
+        res.set('Content-Type', (register as any).contentType || 'text/plain; version=0.0.4');
+        const metrics = await register.metrics();
+        res.send(metrics);
+    } catch (err: any) {
+        res.status(500).send(err?.message || 'unable to collect metrics');
+    }
+});
+
+// Accept lightweight frontend telemetry via POST or navigator.sendBeacon
+app.post('/metrics/events', (req, res) => {
+    try {
+        const body = req.body || {};
+        const event = typeof body.event === 'string' ? body.event : (req.query.event as string | undefined);
+        const page = typeof body.page === 'string' ? body.page : (req.query.page as string | undefined);
+        const ua = req.headers['user-agent'] || 'unknown';
+        if (!event) return res.status(400).json({ message: 'missing event' });
+        recordFrontendEvent(event, { page, userAgent: String(ua) });
+        // Accept both beacon and normal posts; respond quickly
+        return res.status(204).end();
+    } catch (e) {
+        return res.status(500).json({ message: 'unable to record event' });
+    }
+});
 
 // Build allowed origins from environment or default dev hosts
 const defaultAllowed = ["http://localhost:5173", "http://localhost:4173"];
@@ -52,6 +102,8 @@ app.use("/checkout", checkoutRoutes);
 app.use("/cart", cartRoutes);
 app.use("/auth", authRoutes);
 app.use("/category", categoryRoutes);
+// Support both singular and plural category routes for compatibility with frontend bundles
+app.use("/categories", categoryRoutes);
 
 app.use(errorMiddleware);
 

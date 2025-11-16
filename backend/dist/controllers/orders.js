@@ -12,15 +12,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrdersStats = exports.getOrderById = exports.getOrdersByUserId = exports.getAllOrders = void 0;
+exports.rejectOrder = exports.confirmOrder = exports.getOrdersStats = exports.getOrderById = exports.getOrdersByUserId = exports.getAllOrders = void 0;
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
+const metrics_1 = require("../utils/metrics");
+const stripe_1 = __importDefault(require("../config/stripe"));
 const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // Support query params for admin listing: search, sort, from, to, page, pageSize
     try {
-        const { search = "", sortBy = "createdAt", sortDir = "desc", from, to, page = "1", pageSize = "50" } = req.query;
+        const { search = "", sortBy = "createdAt", sortDir = "desc", from, to, page = "1", pageSize = "50", status } = req.query;
         const take = Math.min(200, parseInt(pageSize, 10) || 50);
         const skip = (Math.max(1, parseInt(page, 10) || 1) - 1) * take;
         const where = {};
+        // status filter (PENDING | CONFIRMED | REJECTED)
+        if (status && typeof status === 'string') {
+            const s = status.toUpperCase();
+            if (s === 'PENDING' || s === 'CONFIRMED' || s === 'REJECTED') {
+                where.status = s;
+            }
+        }
         // date range filter (validate)
         if (from || to) {
             const createdAt = {};
@@ -65,7 +74,7 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             prisma_client_1.default.order.findMany({
                 where,
                 orderBy,
-                include: { user: true, details: { include: { product: true } } },
+                include: { user: true, details: { include: { product: { include: { category: true } } } } },
                 skip,
                 take
             }),
@@ -88,7 +97,8 @@ const getOrdersByUserId = (req, res) => __awaiter(void 0, void 0, void 0, functi
             createdAt: "desc"
         },
         include: {
-            user: true
+            user: true,
+            details: { include: { product: { include: { category: true } } } }
         }
     });
     if (!orders) {
@@ -105,7 +115,7 @@ const getOrderById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const p = prisma_client_1.default;
         const order = yield p.order.findUnique({
             where: { id },
-            include: { user: true, details: { include: { product: true } } }
+            include: { user: true, details: { include: { product: { include: { category: true } } } } }
         });
         if (!order)
             return res.status(404).json({ message: 'Order not found' });
@@ -124,19 +134,24 @@ const getOrderById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.getOrderById = getOrderById;
 const getOrdersStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     // Thống kê đơn hàng: tổng đơn, tổng doanh thu, đơn theo ngày trong 7 ngày gần nhất
     try {
+        // Count all orders (PENDING, CONFIRMED, REJECTED)
         const totalOrders = yield prisma_client_1.default.order.count();
+        // Revenue only counts CONFIRMED orders
         const totalRevenueAggregate = yield prisma_client_1.default.order.aggregate({
             _sum: {
                 amount: true
-            }
+            },
+            where: { status: 'CONFIRMED' }
         });
-        const totalRevenue = totalRevenueAggregate._sum.amount || 0;
+        const totalRevenue = ((_a = totalRevenueAggregate === null || totalRevenueAggregate === void 0 ? void 0 : totalRevenueAggregate._sum) === null || _a === void 0 ? void 0 : _a.amount) || 0;
         // Orders per day (last 7 days)
         const now = new Date();
         const sevenDaysAgo = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000); // includes today (7 days)
-        const orders = yield prisma_client_1.default.order.findMany({
+        // Fetch all orders for count, but only CONFIRMED for revenue
+        const allOrders = yield prisma_client_1.default.order.findMany({
             where: {
                 createdAt: {
                     gte: sevenDaysAgo
@@ -144,7 +159,8 @@ const getOrdersStats = (req, res) => __awaiter(void 0, void 0, void 0, function*
             },
             select: {
                 createdAt: true,
-                amount: true
+                amount: true,
+                status: true
             }
         });
         // build map day -> count, revenue
@@ -154,12 +170,15 @@ const getOrdersStats = (req, res) => __awaiter(void 0, void 0, void 0, function*
             const key = d.toISOString().slice(0, 10);
             statsByDay.push({ date: key, count: 0, revenue: 0 });
         }
-        orders.forEach((o) => {
+        allOrders.forEach((o) => {
             const key = o.createdAt.toISOString().slice(0, 10);
             const stat = statsByDay.find(s => s.date === key);
             if (stat) {
-                stat.count += 1;
-                stat.revenue += (o.amount || 0);
+                stat.count += 1; // Count all orders
+                // Only add to revenue if CONFIRMED
+                if (o.status === 'CONFIRMED') {
+                    stat.revenue += (o.amount || 0);
+                }
             }
         });
         return res.status(200).json({ totalOrders, totalRevenue, statsByDay });
@@ -169,3 +188,66 @@ const getOrdersStats = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getOrdersStats = getOrdersStats;
+// Admin: confirm order (counts into revenue/stats)
+const confirmOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id))
+            return res.status(400).json({ message: 'Invalid order id' });
+        const order = yield prisma_client_1.default.order.findUnique({ where: { id } });
+        if (!order)
+            return res.status(404).json({ message: 'Order not found' });
+        if (order.status === 'CONFIRMED')
+            return res.status(200).json(order);
+        if (order.status === 'REJECTED')
+            return res.status(400).json({ message: 'Cannot confirm a rejected order' });
+        const updated = yield prisma_client_1.default.order.update({ where: { id }, data: { status: 'CONFIRMED' } });
+        try {
+            metrics_1.ordersConfirmedCounter.inc({ source: 'admin' });
+        }
+        catch (e) { }
+        return res.json(updated);
+    }
+    catch (error) {
+        return res.status(500).json({ message: 'Unable to confirm order', error });
+    }
+});
+exports.confirmOrder = confirmOrder;
+// Admin: reject order (refund customer, exclude from stats)
+const rejectOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id))
+            return res.status(400).json({ message: 'Invalid order id' });
+        const order = yield prisma_client_1.default.order.findUnique({ where: { id } });
+        if (!order)
+            return res.status(404).json({ message: 'Order not found' });
+        if (order.status === 'REJECTED')
+            return res.status(200).json(order);
+        if (order.status === 'CONFIRMED')
+            return res.status(400).json({ message: 'Cannot reject a confirmed order' });
+        // Try to refund via Stripe Checkout session -> payment_intent
+        try {
+            const session = yield stripe_1.default.checkout.sessions.retrieve(order.sessionId);
+            const paymentIntentId = session.payment_intent;
+            if (paymentIntentId) {
+                // Create full refund; in real-world handle partials and idempotency keys
+                yield stripe_1.default.refunds.create({ payment_intent: paymentIntentId });
+            }
+        }
+        catch (e) {
+            // Log but proceed to mark rejected so admin can resolve separately
+            console.error('Stripe refund failed for order', id, e);
+        }
+        const updated = yield prisma_client_1.default.order.update({ where: { id }, data: { status: 'REJECTED' } });
+        try {
+            metrics_1.ordersRejectedCounter.inc({ source: 'admin' });
+        }
+        catch (e) { }
+        return res.json(updated);
+    }
+    catch (error) {
+        return res.status(500).json({ message: 'Unable to reject order', error });
+    }
+});
+exports.rejectOrder = rejectOrder;

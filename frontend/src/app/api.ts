@@ -12,8 +12,9 @@ const getBackendBaseUrl = () => {
         const protocol = window.location.protocol || 'http:';
         const hostname = window.location.hostname || 'localhost';
         if (hostname.startsWith('user-')) {
-            const backendHost = hostname.replace(/^user-/, 'backend-');
-            return `${protocol}//${backendHost}`;
+            const forced = 'https://backend-production-815c.up.railway.app';
+            console.warn('[api] runtime fallback mapping user-* ->', forced, '(temporary)');
+            return forced;
         }
         return `${protocol}//${hostname}:3000`;
     }

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma-client";
+import { ordersConfirmedCounter, ordersRejectedCounter } from '../utils/metrics';
 import stripe from "../config/stripe";
 
 export const getAllOrders = async (req: Request, res: Response) => {
@@ -202,6 +203,7 @@ export const confirmOrder = async (req: Request, res: Response) => {
         if ((order as any).status === 'CONFIRMED') return res.status(200).json(order);
         if ((order as any).status === 'REJECTED') return res.status(400).json({ message: 'Cannot confirm a rejected order' });
     const updated = await (prisma as any).order.update({ where: { id }, data: { status: 'CONFIRMED' } });
+        try { ordersConfirmedCounter.inc({ source: 'admin' }); } catch (e) {}
         return res.json(updated);
     } catch (error) {
         return res.status(500).json({ message: 'Unable to confirm order', error });
@@ -232,6 +234,7 @@ export const rejectOrder = async (req: Request, res: Response) => {
         }
 
     const updated = await (prisma as any).order.update({ where: { id }, data: { status: 'REJECTED' } });
+        try { ordersRejectedCounter.inc({ source: 'admin' }); } catch (e) {}
         return res.json(updated);
     } catch (error) {
         return res.status(500).json({ message: 'Unable to reject order', error });

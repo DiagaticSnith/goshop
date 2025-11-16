@@ -6,7 +6,7 @@ import { MdOutlineRemoveShoppingCart } from "react-icons/md";
 
 export const Orders = () => {
     const { token, isAdmin } = useAuth();
-    const { data: ordersAdmin } = useGetAllOrdersQuery(token, isAdmin);
+    const { data: ordersAdmin, refetch } = useGetAllOrdersQuery(token, isAdmin);
 
     const ordersComponent = useMemo(() => {
         if (!ordersAdmin) return null;
@@ -16,7 +16,7 @@ export const Orders = () => {
                     try { return JSON.parse(order.items as string); } catch { return []; }
                 })() : (order.items || order.details || []);
                 return (
-                    <OrderPreview key={order.id} {...order} items={parsedItems} />
+                    <OrderPreview key={order.id} {...order} items={parsedItems} onRefresh={refetch} />
                 );
             });
         }

@@ -17,7 +17,7 @@ const stripe_1 = __importDefault(require("../config/stripe"));
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 const processOrderAddress_1 = require("../utils/processOrderAddress");
 const webhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     const sig = req.headers["stripe-signature"];
     const rawBody = req.body; // Đã là Buffer do express.raw
     let event;
@@ -38,31 +38,33 @@ const webhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const session = event.data.object;
         const lineItems = yield stripe_1.default.checkout.sessions.listLineItems(session.id);
         const items = yield Promise.all(lineItems.data.map((lineItem) => __awaiter(void 0, void 0, void 0, function* () {
-            var _b;
+            var _c;
             const product = yield prisma_client_1.default.product.findUnique({
-                where: { priceId: ((_b = lineItem.price) === null || _b === void 0 ? void 0 : _b.id) || '' }
+                where: { priceId: ((_c = lineItem.price) === null || _c === void 0 ? void 0 : _c.id) || '' }
             });
             return { product, quantity: lineItem.quantity || 0 };
         })));
         try {
-            // Use a transaction to create order and update stock atomically
-            order = yield prisma_client_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-                var _c, _d, _e, _f, _g;
-                // 1) Create order row first
+            // Use a transaction to create order, create order details and update stock atomically
+            const createdOrder = yield prisma_client_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+                var _d, _e, _f, _g, _h, _j, _k;
+                // 1) Create order row first (do NOT store items JSON anymore)
+                // prefer address from Stripe customer_details; fall back to metadata.address (sent from frontend)
+                const computedAddress = (0, processOrderAddress_1.processOrderAddress)((_d = session.customer_details) === null || _d === void 0 ? void 0 : _d.address) || ((_e = session.metadata) === null || _e === void 0 ? void 0 : _e.address) || "";
                 const created = yield tx.order.create({
+                    // cast data to any to remain compatible until prisma client is regenerated
                     data: {
                         amount: (session.amount_total || 0) / 100,
-                        userId: ((_c = session.metadata) === null || _c === void 0 ? void 0 : _c.customerId) || "",
-                        items: JSON.stringify(items),
-                        country: ((_e = (_d = session.customer_details) === null || _d === void 0 ? void 0 : _d.address) === null || _e === void 0 ? void 0 : _e.country) || "",
-                        address: (0, processOrderAddress_1.processOrderAddress)((_f = session.customer_details) === null || _f === void 0 ? void 0 : _f.address),
+                        userId: ((_f = session.metadata) === null || _f === void 0 ? void 0 : _f.customerId) || "",
+                        country: ((_h = (_g = session.customer_details) === null || _g === void 0 ? void 0 : _g.address) === null || _h === void 0 ? void 0 : _h.country) || "",
+                        address: computedAddress,
                         sessionId: session.id,
                         createdAt: new Date(session.created * 1000)
                     }
                 });
-                // 2) Decrement stock for each purchased item (non-negative)
+                // 2) Decrement stock for each purchased item and create OrderDetails row
                 for (const it of items) {
-                    const pid = (_g = it.product) === null || _g === void 0 ? void 0 : _g.id;
+                    const pid = (_j = it.product) === null || _j === void 0 ? void 0 : _j.id;
                     const qty = it.quantity || 0;
                     if (!pid || qty <= 0)
                         continue;
@@ -78,9 +80,38 @@ const webhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                             yield tx.product.update({ where: { id: pid }, data: { stockQuantity: 0 } });
                         }
                     }
+                    // Create OrderDetails entry linking to product
+                    const unitPrice = ((_k = it.product) === null || _k === void 0 ? void 0 : _k.price) || 0;
+                    yield tx.orderDetails.create({
+                        data: {
+                            orderId: created.id,
+                            productId: pid,
+                            totalQuantity: qty,
+                            totalPrice: unitPrice * qty
+                        }
+                    });
                 }
                 return created;
             }));
+            // Fetch the created order with details to return
+            order = yield prisma_client_1.default.order.findUnique({
+                where: { id: createdOrder.id },
+                include: { details: { include: { product: { include: { category: true } } } }, user: true }
+            });
+            // Clear user's cart after successful order creation
+            const userId = (_b = session.metadata) === null || _b === void 0 ? void 0 : _b.customerId;
+            if (userId) {
+                const userCart = yield prisma_client_1.default.cart.findUnique({
+                    where: { userId },
+                    include: { items: true }
+                });
+                if (userCart) {
+                    // Delete all cart items first, then optionally the cart itself
+                    yield prisma_client_1.default.cartItem.deleteMany({
+                        where: { cartId: userCart.id }
+                    });
+                }
+            }
         }
         catch (err) {
             console.error("Prisma create order error:", err.message);

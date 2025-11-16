@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../app/api";
 import { toast } from "react-toastify";
+import { useQueryClient } from '@tanstack/react-query';
 
 export const OrderPreview = (props: any) => {
   const [isShowInvoice, setIsShowInvoice] = useState<boolean>(false);
   const [status, setStatus] = useState<string>(props.status || "PENDING");
   const { token } = useAuth();
+  const queryClient = useQueryClient();
   // Prefer new `details` relation (OrderDetails) returned by the API. Fallback to legacy `items` JSON.
   const items = Array.isArray(props.details)
     ? (props.details as any[]).map(d => ({ product: d.product, quantity: d.totalQuantity }))
@@ -47,6 +49,24 @@ export const OrderPreview = (props: any) => {
                     await api.post(`/orders/${props.id}/confirm`, undefined, { headers: { Authorization: `Bearer ${token}` } });
                     setStatus('CONFIRMED');
                     toast.success('Order confirmed');
+                    // send lightweight telemetry to backend
+                    try {
+                      const payload = JSON.stringify({ event: 'order_confirmed', page: 'admin_orders' });
+                      if (navigator.sendBeacon) {
+                        navigator.sendBeacon('/metrics/events', payload);
+                      } else {
+                        fetch('/metrics/events', { method: 'POST', body: payload, headers: { 'Content-Type': 'application/json' } });
+                      }
+                    } catch (e) {}
+                    if (typeof props.onRefresh === 'function') await props.onRefresh();
+                    // Ensure dashboard/overview/statistic queries are refreshed so charts update
+                    try {
+                      await queryClient.invalidateQueries(['orders']);
+                      await queryClient.invalidateQueries(['overview']);
+                      await queryClient.invalidateQueries(['statistic']);
+                    } catch (err) {
+                      // ignore cache invalidation errors
+                    }
                   } catch (e) {
                     toast.error('Unable to confirm order');
                   }
@@ -61,6 +81,15 @@ export const OrderPreview = (props: any) => {
                     await api.post(`/orders/${props.id}/reject`, undefined, { headers: { Authorization: `Bearer ${token}` } });
                     setStatus('REJECTED');
                     toast.success('Order rejected and refunded');
+                    if (typeof props.onRefresh === 'function') await props.onRefresh();
+                    // Ensure dashboard/overview/statistic queries are refreshed so charts update
+                    try {
+                      await queryClient.invalidateQueries(['orders']);
+                      await queryClient.invalidateQueries(['overview']);
+                      await queryClient.invalidateQueries(['statistic']);
+                    } catch (err) {
+                      // ignore cache invalidation errors
+                    }
                   } catch (e) {
                     toast.error('Unable to reject order');
                   }

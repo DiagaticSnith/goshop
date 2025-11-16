@@ -157,64 +157,83 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         if (!foundProduct) {
             return res.status(404).json({ message: "Product not found" });
         }
-    
+
+        const image = req.image || foundProduct.image || undefined;
+        // For DB write, ensure non-null image value
+        const imageForDb = req.image || foundProduct.image || "";
+
+        let stripeProductId = foundProduct.id;
+        let newPriceId: string | undefined = undefined;
+
+        // Try to update existing Stripe product metadata
         try {
-            await stripe.products.update(foundProduct.id, {
-                active: false
-            });
+            const updatePayload: any = {
+                name: req.body?.name || foundProduct.name,
+                description: req.body?.description || foundProduct.description
+            };
+            if (image && isUrl(image)) updatePayload.images = [image];
+            await stripe.products.update(foundProduct.id, updatePayload);
         } catch (err: any) {
-            // If the Stripe product was already deleted/doesn't exist, don't fail the whole request.
-            // Log and continue to create a new Stripe product below.
+            // If the Stripe product is missing, create a new one and we'll update DB id below.
             if (err && (err.type === 'StripeInvalidRequestError' || err.raw?.code === 'resource_missing')) {
-                console.warn(`Stripe product not found when attempting to deactivate id=${foundProduct.id}, continuing to recreate:`, err.message || err);
+                console.warn(`Stripe product not found when attempting to update id=${foundProduct.id}, recreating product:`, err.message || err);
+                const createdStripeProduct = await stripe.products.create({
+                    name: req.body?.name || foundProduct.name,
+                    description: req.body?.description || foundProduct.description,
+                    default_price_data: {
+                        currency: 'usd',
+                        unit_amount: Math.round((req.body?.price || foundProduct.price) * 100)
+                    },
+                    ...(image && isUrl(image) ? { images: [image] } : {})
+                });
+                stripeProductId = createdStripeProduct.id;
+                newPriceId = createdStripeProduct.default_price as string;
             } else {
-                // rethrow unknown Stripe errors so they can be handled by error middleware
                 throw err;
             }
         }
-        
-    const image = req.image || foundProduct.image || undefined;
-    // For DB write, ensure non-null image value
-    const imageForDb = req.image || foundProduct.image || "";
-        const updatedStripePayload: any = {
-            name: req.body?.name || foundProduct.name,
-            description: req.body?.description || foundProduct.description,
-            default_price_data: {
-                currency: "usd",
-                unit_amount: Math.round((req.body?.price || foundProduct.price) * 100)
+
+        // If price changed (or we created a new product), create a new Price for the stripe product
+        try {
+            const requestedPrice = Number(req.body.price || foundProduct.price);
+            if (newPriceId === undefined && requestedPrice !== Number(foundProduct.price)) {
+                const priceObj = await stripe.prices.create({
+                    product: stripeProductId,
+                    unit_amount: Math.round(requestedPrice * 100),
+                    currency: 'usd'
+                });
+                newPriceId = priceObj.id;
             }
-        };
-    if (image && isUrl(image)) updatedStripePayload.images = [image];
-        const updatedStripeProduct = await stripe.products.create(updatedStripePayload);
-    
-        const updatedProduct = await prisma.product.update({
-            where: {
-                id: req.params.id
-            },
-            data: ({
-                stockQuantity: Number(req.body.stockQuantity),
-                price: Number(req.body.price),
-                id: updatedStripeProduct.id,
-                priceId: updatedStripeProduct.default_price as string,
-                image: imageForDb,
-                name: req.body.name,
-                description: req.body.description,
-                weight: req.body.weight ? Number(req.body.weight) : undefined,
-                width: req.body.width ? Number(req.body.width) : undefined,
-                height: req.body.height ? Number(req.body.height) : undefined,
-                brand: req.body.brand || undefined,
-                material: req.body.material || undefined,
-                category: {
-                    connectOrCreate: {
-                        where: {
-                            name: req.body.category
-                        },
-                        create: {
-                            name: req.body.category
-                        }
-                    }
+        } catch (err) {
+            // if price create fails for unexpected reasons, rethrow to middleware
+            throw err;
+        }
+
+        // Prepare DB update data; only change product id in DB if we recreated the Stripe product
+        const dbUpdateData: any = {
+            stockQuantity: Number(req.body.stockQuantity),
+            price: Number(req.body.price),
+            image: imageForDb,
+            name: req.body.name,
+            description: req.body.description,
+            weight: req.body.weight ? Number(req.body.weight) : undefined,
+            width: req.body.width ? Number(req.body.width) : undefined,
+            height: req.body.height ? Number(req.body.height) : undefined,
+            brand: req.body.brand || undefined,
+            material: req.body.material || undefined,
+            category: {
+                connectOrCreate: {
+                    where: { name: req.body.category },
+                    create: { name: req.body.category }
                 }
-            } as any)
+            }
+        } as any;
+        if (newPriceId) dbUpdateData.priceId = newPriceId;
+        if (stripeProductId !== foundProduct.id) dbUpdateData.id = stripeProductId;
+
+        const updatedProduct = await prisma.product.update({
+            where: { id: req.params.id },
+            data: dbUpdateData
         });
     
         res.status(200).json(updatedProduct);

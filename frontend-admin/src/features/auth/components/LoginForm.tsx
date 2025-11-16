@@ -40,7 +40,7 @@ export default function LoginForm(){
           throw new Error('Invalid credentials');
         }
   // Force a full reload to ensure auth/role is applied before route guards
-  window.location.assign("/admin?tab=products");
+  window.location.assign("/admin?tab=overview");
       }
     } catch (error) {
       toast.error("Invalid email or password");

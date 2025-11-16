@@ -26,6 +26,16 @@ export const CheckoutSuccess = () => {
         return null;
     }
 
+        // send telemetry about successful checkout (beacon if available)
+        try {
+            const payload = JSON.stringify({ event: 'checkout_success', page: 'checkout_success' });
+            if (typeof navigator !== 'undefined' && (navigator as any).sendBeacon) {
+                (navigator as any).sendBeacon('/metrics/events', payload);
+            } else {
+                fetch('/metrics/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(()=>{});
+            }
+        } catch (e) {}
+
     return (
         <div className="bg-white rounded-xl shadow-2xl mt-10 mx-auto p-10 flex flex-col justify-center items-center w-full min-[550px]:w-[500px]">
             <div className="bg-[#23A26D1F] bg-opacity-[12%] rounded-[50%] w-24 h-24 flex items-center justify-center mb-6">
