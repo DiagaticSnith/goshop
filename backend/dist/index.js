@@ -39,13 +39,72 @@ app.use((req, res, next) => {
     }
     catch (e) { }
     const start = Date.now();
+    // track bytes received on request (supports chunked bodies and content-length)
+    let reqBytes = 0;
+    try {
+        const cl = req.headers['content-length'];
+        if (cl)
+            reqBytes = Number(cl) || 0;
+    }
+    catch (e) {
+        reqBytes = 0;
+    }
+    // also listen to data events for more accurate counts when available
+    req.on && req.on('data', (chunk) => {
+        try {
+            reqBytes += (chunk && chunk.length) || 0;
+        }
+        catch (e) { }
+    });
+    // Wrap response write/end to count bytes sent
+    let resBytes = 0;
+    const origWrite = res.write;
+    const origEnd = res.end;
+    // @ts-ignore
+    res.write = function (chunk, encoding, cb) {
+        try {
+            if (chunk) {
+                if (Buffer.isBuffer(chunk))
+                    resBytes += chunk.length;
+                else if (typeof chunk === 'string')
+                    resBytes += Buffer.byteLength(chunk, encoding);
+            }
+        }
+        catch (e) { }
+        // @ts-ignore
+        return origWrite.apply(res, arguments);
+    };
+    // @ts-ignore
+    res.end = function (chunk, encoding, cb) {
+        try {
+            if (chunk) {
+                if (Buffer.isBuffer(chunk))
+                    resBytes += chunk.length;
+                else if (typeof chunk === 'string')
+                    resBytes += Buffer.byteLength(chunk, encoding);
+            }
+        }
+        catch (e) { }
+        // @ts-ignore
+        return origEnd.apply(res, arguments);
+    };
     res.on('finish', () => {
         var _a;
         const duration = (Date.now() - start) / 1000;
         const route = ((_a = req.route) === null || _a === void 0 ? void 0 : _a.path) || req.path || 'unknown';
+        const status = String(res.statusCode);
         try {
-            metrics_1.httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) });
-            metrics_1.httpRequestDuration.observe({ method: req.method, route, status: String(res.statusCode) }, duration);
+            metrics_1.httpRequestCounter.inc({ method: req.method, route, status });
+            metrics_1.httpRequestDuration.observe({ method: req.method, route, status }, duration);
+            // record bytes counters
+            try {
+                metrics_1.httpRequestBytesTotal.inc({ method: req.method, route, status }, reqBytes);
+            }
+            catch (e) { }
+            try {
+                metrics_1.httpResponseBytesTotal.inc({ method: req.method, route, status }, resBytes);
+            }
+            catch (e) { }
         }
         catch (e) {
             // ignore

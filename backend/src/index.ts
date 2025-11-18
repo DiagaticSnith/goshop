@@ -13,7 +13,7 @@ import cartRoutes from "./routes/cart";
 import { webhook } from "./controllers/webhook";
 import path from "path";
 import client from 'prom-client';
-import { register, httpRequestCounter, httpRequestDuration, frontendEventsCounter, recordFrontendEvent, inFlightRequests } from './utils/metrics';
+import { register, httpRequestCounter, httpRequestDuration, httpRequestBytesTotal, httpResponseBytesTotal, frontendEventsCounter, recordFrontendEvent, inFlightRequests } from './utils/metrics';
 import { v2 as cloudinary } from "cloudinary";
 import dbMetrics from './utils/dbMetrics';
 
@@ -24,21 +24,62 @@ const PORT = process.env.PORT || 3000;
 app.use((req, res, next) => {
     // track in-flight
     try { inFlightRequests.inc(); } catch (e) {}
+        const start = Date.now();
 
-    const start = Date.now();
-
-    res.on('finish', () => {
-        const duration = (Date.now() - start) / 1000;
-        const route = (req as any).route?.path || req.path || 'unknown';
+        // track bytes received on request (supports chunked bodies and content-length)
+        let reqBytes = 0;
         try {
-            httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) });
-            httpRequestDuration.observe({ method: req.method, route, status: String(res.statusCode) }, duration);
-        } catch (e) {
-            // ignore
-        }
-        try { inFlightRequests.dec(); } catch (e) {}
-    });
-    next();
+            const cl = req.headers['content-length'];
+            if (cl) reqBytes = Number(cl) || 0;
+        } catch (e) { reqBytes = 0; }
+        // also listen to data events for more accurate counts when available
+        req.on && req.on('data', (chunk: any) => {
+            try { reqBytes += (chunk && chunk.length) || 0; } catch (e) {}
+        });
+
+        // Wrap response write/end to count bytes sent
+        let resBytes = 0;
+        const origWrite = res.write;
+        const origEnd = res.end;
+        // @ts-ignore
+        res.write = function (chunk: any, encoding?: any, cb?: any) {
+            try {
+                if (chunk) {
+                    if (Buffer.isBuffer(chunk)) resBytes += chunk.length;
+                    else if (typeof chunk === 'string') resBytes += Buffer.byteLength(chunk, encoding);
+                }
+            } catch (e) {}
+            // @ts-ignore
+            return origWrite.apply(res, arguments as any);
+        };
+        // @ts-ignore
+        res.end = function (chunk: any, encoding?: any, cb?: any) {
+            try {
+                if (chunk) {
+                    if (Buffer.isBuffer(chunk)) resBytes += chunk.length;
+                    else if (typeof chunk === 'string') resBytes += Buffer.byteLength(chunk, encoding);
+                }
+            } catch (e) {}
+            // @ts-ignore
+            return origEnd.apply(res, arguments as any);
+        };
+
+        res.on('finish', () => {
+                const duration = (Date.now() - start) / 1000;
+                const route = (req as any).route?.path || req.path || 'unknown';
+                const status = String(res.statusCode);
+                try {
+                        httpRequestCounter.inc({ method: req.method, route, status });
+                        httpRequestDuration.observe({ method: req.method, route, status }, duration);
+                        // record bytes counters
+                        try { httpRequestBytesTotal.inc({ method: req.method, route, status }, reqBytes); } catch (e) {}
+                        try { httpResponseBytesTotal.inc({ method: req.method, route, status }, resBytes); } catch (e) {}
+                } catch (e) {
+                        // ignore
+                }
+                try { inFlightRequests.dec(); } catch (e) {}
+        });
+        next();
 });
 
 // The Stripe webhook requires the raw body for signature verification.
