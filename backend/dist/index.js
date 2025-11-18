@@ -57,6 +57,9 @@ app.use((req, res, next) => {
     });
     next();
 });
+// The Stripe webhook requires the raw body for signature verification.
+// Register the webhook route BEFORE any body parsers so express.raw can read the raw buffer.
+app.post("/api/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhook);
 // Parse JSON bodies for telemetry ingestion and other POSTs
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
@@ -112,7 +115,6 @@ cloudinary_1.v2.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
-app.post("/api/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhook);
 app.use("/uploads/", express_1.default.static(path_1.default.join(process.cwd(), "/uploads/")));
 app.use("/products", products_1.default);
 app.use("/users", users_1.default);
