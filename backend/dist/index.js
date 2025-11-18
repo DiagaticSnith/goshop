@@ -28,6 +28,7 @@ const webhook_1 = require("./controllers/webhook");
 const path_1 = __importDefault(require("path"));
 const metrics_1 = require("./utils/metrics");
 const cloudinary_1 = require("cloudinary");
+const dbMetrics_1 = __importDefault(require("./utils/dbMetrics"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Middleware to count requests and label by method/route/status
@@ -56,6 +57,9 @@ app.use((req, res, next) => {
     });
     next();
 });
+// Parse JSON bodies for telemetry ingestion and other POSTs
+app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
 // Expose Prometheus metrics
 app.get('/metrics', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -109,8 +113,6 @@ cloudinary_1.v2.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 app.post("/api/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhook);
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
 app.use("/uploads/", express_1.default.static(path_1.default.join(process.cwd(), "/uploads/")));
 app.use("/products", products_1.default);
 app.use("/users", users_1.default);
@@ -122,6 +124,13 @@ app.use("/category", category_1.default);
 // Support both singular and plural category routes for compatibility with frontend bundles
 app.use("/categories", category_1.default);
 app.use(errorMiddleware_1.errorMiddleware);
+// Start optional DB metrics collector
+try {
+    dbMetrics_1.default.start();
+}
+catch (e) {
+    console.warn('dbMetrics: start failed', e && e.message);
+}
 app.listen({ address: "0.0.0.0", port: PORT }, () => {
     console.log(`Server running on port: ${PORT}`);
 });

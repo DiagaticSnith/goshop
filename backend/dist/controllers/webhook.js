@@ -16,6 +16,7 @@ exports.webhook = void 0;
 const stripe_1 = __importDefault(require("../config/stripe"));
 const prisma_client_1 = __importDefault(require("../config/prisma-client"));
 const processOrderAddress_1 = require("../utils/processOrderAddress");
+const metrics_1 = require("../utils/metrics");
 const webhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const sig = req.headers["stripe-signature"];
@@ -98,6 +99,14 @@ const webhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 where: { id: createdOrder.id },
                 include: { details: { include: { product: { include: { category: true } } } }, user: true }
             });
+            try {
+                metrics_1.ordersCreated.inc({ source: 'stripe' });
+            }
+            catch (e) { }
+            try {
+                metrics_1.checkoutSuccess.inc({ source: 'stripe' });
+            }
+            catch (e) { }
             // Clear user's cart after successful order creation
             const userId = (_b = session.metadata) === null || _b === void 0 ? void 0 : _b.customerId;
             if (userId) {

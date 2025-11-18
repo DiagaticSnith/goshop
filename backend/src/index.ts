@@ -15,6 +15,7 @@ import path from "path";
 import client from 'prom-client';
 import { register, httpRequestCounter, httpRequestDuration, frontendEventsCounter, recordFrontendEvent, inFlightRequests } from './utils/metrics';
 import { v2 as cloudinary } from "cloudinary";
+import dbMetrics from './utils/dbMetrics';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,10 @@ app.use((req, res, next) => {
     });
     next();
 });
+
+// Parse JSON bodies for telemetry ingestion and other POSTs
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Expose Prometheus metrics
 app.get('/metrics', async (req, res) => {
@@ -92,8 +97,6 @@ cloudinary.config({
 });
 
 app.post("/api/webhook", express.raw({type: "application/json"}), webhook);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use("/uploads/", express.static(path.join(process.cwd(), "/uploads/")));
 app.use("/products", productRoutes);
 app.use("/users", usersRoutes);
@@ -107,6 +110,13 @@ app.use("/categories", categoryRoutes);
 
 app.use(errorMiddleware);
 
+// Start optional DB metrics collector
+try {
+    dbMetrics.start();
+} catch (e) {
+    console.warn('dbMetrics: start failed', e && (e as any).message);
+}
+
 app.listen({ address: "0.0.0.0", port: PORT }, () => {
-    console.log(`Server running on port: ${PORT}`);
+        console.log(`Server running on port: ${PORT}`);
 });

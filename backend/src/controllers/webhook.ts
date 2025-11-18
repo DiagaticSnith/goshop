@@ -4,6 +4,7 @@ import prisma from "../config/prisma-client";
 import { Prisma } from "@prisma/client";
 import Stripe from "stripe";
 import { processOrderAddress } from "../utils/processOrderAddress";
+import { ordersCreated, checkoutSuccess } from '../utils/metrics';
 
 export const webhook = async (req: Request, res: Response) => {
     const sig = req.headers["stripe-signature"] as string;
@@ -95,6 +96,8 @@ export const webhook = async (req: Request, res: Response) => {
                 where: { id: createdOrder.id },
                 include: { details: { include: { product: { include: { category: true } } } }, user: true }
             });
+            try { ordersCreated.inc({ source: 'stripe' }); } catch (e) {}
+            try { checkoutSuccess.inc({ source: 'stripe' }); } catch (e) {}
             // Clear user's cart after successful order creation
             const userId = session.metadata?.customerId;
             if (userId) {
