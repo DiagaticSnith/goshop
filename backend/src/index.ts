@@ -13,7 +13,7 @@ import cartRoutes from "./routes/cart";
 import { webhook } from "./controllers/webhook";
 import path from "path";
 import client from 'prom-client';
-import { register, httpRequestCounter, httpRequestDuration, httpRequestBytesTotal, httpResponseBytesTotal, frontendEventsCounter, recordFrontendEvent, inFlightRequests } from './utils/metrics';
+import { register, httpRequestCounter, httpRequestDuration, httpRequestBytesTotal, httpResponseBytesTotal, frontendEventsCounter, frontendPageLoadSeconds, frontendJsErrors, frontendResourceErrors, frontendRequests, recordFrontendEvent, inFlightRequests } from './utils/metrics';
 import { v2 as cloudinary } from "cloudinary";
 import dbMetrics from './utils/dbMetrics';
 
@@ -109,7 +109,31 @@ app.post('/metrics/events', (req, res) => {
         const page = typeof body.page === 'string' ? body.page : (req.query.page as string | undefined);
         const ua = req.headers['user-agent'] || 'unknown';
         if (!event) return res.status(400).json({ message: 'missing event' });
-        recordFrontendEvent(event, { page, userAgent: String(ua) });
+        // Map common RUM events into specific metrics
+        try {
+            if (event === 'page_load') {
+                const duration = Number(body.duration || body.value || 0);
+                const route = String(body.route || page || req.path || 'unknown');
+                const origin = String(body.origin || req.headers.origin || 'unknown');
+                if (!Number.isNaN(duration) && duration > 0) {
+                    frontendPageLoadSeconds.observe({ route, origin }, duration);
+                } else {
+                    // fallback: still record generic event
+                    recordFrontendEvent(event, { page, userAgent: String(ua) });
+                }
+            } else if (event === 'js_error') {
+                frontendJsErrors.inc({ route: String(body.route || page || 'unknown'), severity: String(body.severity || 'error') });
+            } else if (event === 'resource_error') {
+                frontendResourceErrors.inc({ route: String(body.route || page || 'unknown'), resource_type: String(body.resource_type || 'unknown') });
+            } else if (event === 'frontend_request') {
+                frontendRequests.inc({ route: String(body.route || page || 'unknown'), method: String(body.method || 'GET'), status: String(body.status || '0') });
+            } else {
+                recordFrontendEvent(event, { page, userAgent: String(ua) });
+            }
+        } catch (err) {
+            // swallow metric errors
+            recordFrontendEvent(event, { page, userAgent: String(ua) });
+        }
         // Accept both beacon and normal posts; respond quickly
         return res.status(204).end();
     } catch (e) {
