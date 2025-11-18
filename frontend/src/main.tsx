@@ -11,6 +11,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AxiosError } from "axios";
+import { api } from './app/api';
 
 const queryClient = new QueryClient({
     queryCache: new QueryCache({
@@ -56,10 +57,12 @@ try {
                 durationSec = performance.now() / 1000;
             }
             const payload = JSON.stringify({ event: 'page_load', route: location.pathname, origin: location.origin, duration: durationSec });
+            const base = (api && (api as any).defaults && (api as any).defaults.baseURL) ? String((api as any).defaults.baseURL).replace(/\/$/, '') : '';
+            const target = base ? `${base}/metrics/events` : '/metrics/events';
             if (navigator.sendBeacon) {
-                navigator.sendBeacon('/metrics/events', payload);
+                navigator.sendBeacon(target, payload);
             } else {
-                fetch('/metrics/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
+                fetch(target, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
             }
         } catch (e) {}
     };
