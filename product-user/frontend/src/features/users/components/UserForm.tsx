@@ -1,0 +1,180 @@
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import PreviewImage from "../../../components/Elements/PreviewImage";
+import { useUpdateUserMutation } from "../api/updateUser";
+import { convertToFormData } from "../../../utils/convertToFormData";
+import { useAuth } from "../../../context/AuthContext";
+import { useState, useEffect } from "react";
+import { Spinner } from "../../../components/Elements/Spinner";
+import { useGetUserQuery } from "../api/getUser";
+
+const fieldRequiredError = "This field is required.";
+const userValidationSchema = yup.object({
+    email: yup.string().email("Please enter a valid email address").required(fieldRequiredError),
+    firstName: yup.string().required(fieldRequiredError).matches(/^[aA-zZ\s]+$/, "Name can only contain alphabets"),
+    lastName: yup.string().required(fieldRequiredError).matches(/^[aA-zZ\s]+$/, "Name can only contain alphabets"),
+    image: yup.mixed().nullable(),
+    address: yup.string().optional(),
+    phone: yup.string().matches(/^[0-9+-]*$/).optional(),
+});
+export type UserFormType = yup.InferType<typeof userValidationSchema>;
+
+
+const UserForm = () => {
+    const { currentUser, signInWithToken, token } = useAuth();
+    const [isUpdating, setIsUpdating] = useState(false);
+    const { data: userData } = useGetUserQuery(currentUser?.uid || "", token || "");
+
+    const { register, handleSubmit, formState: { errors, isDirty }, control, setValue, reset } = useForm<UserFormType>({
+        resolver: yupResolver<UserFormType>(userValidationSchema),
+        defaultValues: {
+            email: currentUser?.email || "",
+            firstName: currentUser?.displayName?.split(" ")[0] || "",
+            lastName: currentUser?.displayName?.split(" ")[1] || "",
+            image: currentUser?.photoURL,
+            address: "",
+            phone: "",
+        }
+    });
+    const [preview, setPreview] = useState<string | ArrayBuffer | null | undefined>(currentUser?.photoURL);
+
+    // Update form when userData is loaded
+    useEffect(() => {
+        if (userData) {
+            // Backend stores phone as `phoneNumber`; frontend uses `phone`.
+            const phoneVal = (userData as any).phone || (userData as any).phoneNumber || "";
+            reset({
+                email: currentUser?.email || "",
+                firstName: currentUser?.displayName?.split(" ")[0] || "",
+                lastName: currentUser?.displayName?.split(" ")[1] || "",
+                image: currentUser?.photoURL,
+                address: userData.address || "",
+                phone: phoneVal,
+            });
+        }
+    }, [userData, currentUser, reset]);
+
+    const { mutateAsync: updateUserOnBackend } = useUpdateUserMutation(currentUser?.uid || "", token);
+    const onSubmit = async (data: UserFormType) => {
+        if (isDirty) {
+            setIsUpdating(true);
+            const fullName = `${data.firstName} ${data.lastName}`;
+            const { token } = await updateUserOnBackend(convertToFormData({
+                firebaseId: currentUser?.uid,
+                email: data.email.trim(),
+                fullName,
+                avatar: data.image as Blob | string,
+                address: data.address || "",
+                phone: data.phone || "",
+            }));
+            await signInWithToken(token);
+            currentUser?.reload();
+            setIsUpdating(false);
+        }
+    };
+
+    return (
+        <form className="flex flex-col relative" onSubmit={handleSubmit(onSubmit)}>
+            {isUpdating && <Spinner />}
+            <div className="mx-auto">
+                <PreviewImage
+                    control={control}
+                    setValue={setValue}
+                    error={errors.image?.message as string}
+                    context="user"
+                    preview={preview}
+                    setPreview={setPreview}
+                />
+            </div>
+            <div className="flex flex-col mb-3">
+                <label htmlFor="email" className="text-secondary">
+            Email
+                </label>
+                <input
+                    {...register("email")}
+                    type="email"
+                    id="email"
+                    placeholder="Enter Email Address"
+                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none cursor-not-allowed opacity-90"
+                    disabled
+                    aria-disabled
+                />
+                <span className="text-xs text-secondary mt-1">Email cannot be changed</span>
+                {
+                    <p className="text-red-500 font-semibold mt-1">
+                        {errors.email?.message}
+                    </p>
+                }
+            </div>
+            <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:space-x-2 mb-3">
+                <div className="flex flex-col w-full">
+                    <label htmlFor="firstName" className="text-secondary">
+              First Name
+                    </label>
+                    <input
+                        {...register("firstName")}
+                        type="text"
+                        id="firstName"
+                        placeholder="Enter First Name"
+                        className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none"
+                    />
+                    {
+                        <p className="text-red-500 font-semibold mt-1">
+                            {errors.firstName?.message}
+                        </p>
+                    }
+                </div>
+                <div className="flex flex-col w-full">
+                    <label htmlFor="lastName" className="text-secondary">
+              Last Name
+                    </label>
+                    <input
+                        {...register("lastName")}
+                        type="text"
+                        id="lastName"
+                        placeholder="Enter Last Name"
+                        className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none"
+                    />
+                    {
+                        <p className="text-red-500 font-semibold mt-1">
+                            {errors.lastName?.message}
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <div className="flex flex-col mb-3">
+                <label htmlFor="address" className="text-secondary">
+            Shipping Address
+                </label>
+                <textarea
+                    {...register("address")}
+                    id="address"
+                    placeholder="Enter your full shipping address (street, city, state, postal code, country)..."
+                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none resize-none"
+                    rows={4}
+                />
+            </div>
+
+             <div className="flex flex-col mb-3">
+                <label htmlFor="phone" className="text-secondary">
+            Phone Number
+                </label>
+                <textarea
+                    {...register("phone")}
+                    id="phone"
+                    placeholder="Enter your phone number"
+                    className="px-4 py-3 rounded-lg bg-gray-200 mt-1 border focus:border-primary focus:bg-white focus:outline-none resize-none"
+                    rows={4}
+                />
+            </div>
+
+            <button className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4">
+          Update profile
+            </button>
+        </form>
+    );
+};
+
+export default UserForm;
