@@ -28,6 +28,7 @@ const webhook_1 = require("./controllers/webhook");
 const path_1 = __importDefault(require("path"));
 const metrics_1 = require("./utils/metrics");
 const cloudinary_1 = require("cloudinary");
+const dbMetrics_1 = __importDefault(require("./utils/dbMetrics"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Middleware to count requests and label by method/route/status
@@ -38,13 +39,72 @@ app.use((req, res, next) => {
     }
     catch (e) { }
     const start = Date.now();
+    // track bytes received on request (supports chunked bodies and content-length)
+    let reqBytes = 0;
+    try {
+        const cl = req.headers['content-length'];
+        if (cl)
+            reqBytes = Number(cl) || 0;
+    }
+    catch (e) {
+        reqBytes = 0;
+    }
+    // also listen to data events for more accurate counts when available
+    req.on && req.on('data', (chunk) => {
+        try {
+            reqBytes += (chunk && chunk.length) || 0;
+        }
+        catch (e) { }
+    });
+    // Wrap response write/end to count bytes sent
+    let resBytes = 0;
+    const origWrite = res.write;
+    const origEnd = res.end;
+    // @ts-ignore
+    res.write = function (chunk, encoding, cb) {
+        try {
+            if (chunk) {
+                if (Buffer.isBuffer(chunk))
+                    resBytes += chunk.length;
+                else if (typeof chunk === 'string')
+                    resBytes += Buffer.byteLength(chunk, encoding);
+            }
+        }
+        catch (e) { }
+        // @ts-ignore
+        return origWrite.apply(res, arguments);
+    };
+    // @ts-ignore
+    res.end = function (chunk, encoding, cb) {
+        try {
+            if (chunk) {
+                if (Buffer.isBuffer(chunk))
+                    resBytes += chunk.length;
+                else if (typeof chunk === 'string')
+                    resBytes += Buffer.byteLength(chunk, encoding);
+            }
+        }
+        catch (e) { }
+        // @ts-ignore
+        return origEnd.apply(res, arguments);
+    };
     res.on('finish', () => {
         var _a;
         const duration = (Date.now() - start) / 1000;
         const route = ((_a = req.route) === null || _a === void 0 ? void 0 : _a.path) || req.path || 'unknown';
+        const status = String(res.statusCode);
         try {
-            metrics_1.httpRequestCounter.inc({ method: req.method, route, status: String(res.statusCode) });
-            metrics_1.httpRequestDuration.observe({ method: req.method, route, status: String(res.statusCode) }, duration);
+            metrics_1.httpRequestCounter.inc({ method: req.method, route, status });
+            metrics_1.httpRequestDuration.observe({ method: req.method, route, status }, duration);
+            // record bytes counters
+            try {
+                metrics_1.httpRequestBytesTotal.inc({ method: req.method, route, status }, reqBytes);
+            }
+            catch (e) { }
+            try {
+                metrics_1.httpResponseBytesTotal.inc({ method: req.method, route, status }, resBytes);
+            }
+            catch (e) { }
         }
         catch (e) {
             // ignore
@@ -56,6 +116,12 @@ app.use((req, res, next) => {
     });
     next();
 });
+// The Stripe webhook requires the raw body for signature verification.
+// Register the webhook route BEFORE any body parsers so express.raw can read the raw buffer.
+app.post("/api/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhook);
+// Parse JSON bodies for telemetry ingestion and other POSTs
+app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
 // Expose Prometheus metrics
 app.get('/metrics', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -76,7 +142,37 @@ app.post('/metrics/events', (req, res) => {
         const ua = req.headers['user-agent'] || 'unknown';
         if (!event)
             return res.status(400).json({ message: 'missing event' });
-        (0, metrics_1.recordFrontendEvent)(event, { page, userAgent: String(ua) });
+        // Map common RUM events into specific metrics
+        try {
+            if (event === 'page_load') {
+                const duration = Number(body.duration || body.value || 0);
+                const route = String(body.route || page || req.path || 'unknown');
+                const origin = String(body.origin || req.headers.origin || 'unknown');
+                if (!Number.isNaN(duration) && duration > 0) {
+                    metrics_1.frontendPageLoadSeconds.observe({ route, origin }, duration);
+                }
+                else {
+                    // fallback: still record generic event
+                    (0, metrics_1.recordFrontendEvent)(event, { page, userAgent: String(ua) });
+                }
+            }
+            else if (event === 'js_error') {
+                metrics_1.frontendJsErrors.inc({ route: String(body.route || page || 'unknown'), severity: String(body.severity || 'error') });
+            }
+            else if (event === 'resource_error') {
+                metrics_1.frontendResourceErrors.inc({ route: String(body.route || page || 'unknown'), resource_type: String(body.resource_type || 'unknown') });
+            }
+            else if (event === 'frontend_request') {
+                metrics_1.frontendRequests.inc({ route: String(body.route || page || 'unknown'), method: String(body.method || 'GET'), status: String(body.status || '0') });
+            }
+            else {
+                (0, metrics_1.recordFrontendEvent)(event, { page, userAgent: String(ua) });
+            }
+        }
+        catch (err) {
+            // swallow metric errors
+            (0, metrics_1.recordFrontendEvent)(event, { page, userAgent: String(ua) });
+        }
         // Accept both beacon and normal posts; respond quickly
         return res.status(204).end();
     }
@@ -108,9 +204,6 @@ cloudinary_1.v2.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
-app.post("/api/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhook);
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
 app.use("/uploads/", express_1.default.static(path_1.default.join(process.cwd(), "/uploads/")));
 app.use("/products", products_1.default);
 app.use("/users", users_1.default);
@@ -122,6 +215,13 @@ app.use("/category", category_1.default);
 // Support both singular and plural category routes for compatibility with frontend bundles
 app.use("/categories", category_1.default);
 app.use(errorMiddleware_1.errorMiddleware);
+// Start optional DB metrics collector
+try {
+    dbMetrics_1.default.start();
+}
+catch (e) {
+    console.warn('dbMetrics: start failed', e && e.message);
+}
 app.listen({ address: "0.0.0.0", port: PORT }, () => {
     console.log(`Server running on port: ${PORT}`);
 });

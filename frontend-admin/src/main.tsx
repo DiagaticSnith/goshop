@@ -7,6 +7,7 @@ import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './app/store'
 import { AuthProvider } from './context/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import api from './app/api'
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -21,3 +22,32 @@ createRoot(document.getElementById('root')!).render(
     </Provider>
   </React.StrictMode>
 )
+
+// Send page load telemetry to backend
+try {
+  const sendPageLoad = () => {
+    try {
+      const navEntries = (performance.getEntriesByType && performance.getEntriesByType('navigation')) || [];
+      const nav = navEntries[0] as any;
+      let durationSec = 0;
+      if (nav && typeof nav.loadEventEnd === 'number' && nav.loadEventEnd > 0) {
+        durationSec = nav.loadEventEnd / 1000;
+      } else if (typeof performance.now === 'function') {
+        durationSec = performance.now() / 1000;
+      }
+      const payload = JSON.stringify({ event: 'page_load', route: location.pathname, origin: location.origin, duration: durationSec });
+      const base = (api && (api as any).defaults && (api as any).defaults.baseURL) ? String((api as any).defaults.baseURL).replace(/\/$/, '') : '';
+      const target = base ? `${base}/metrics/events` : '/metrics/events';
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(target, payload);
+      } else {
+        fetch(target, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
+      }
+    } catch (e) {}
+  };
+  if (document.readyState === 'complete') {
+    setTimeout(sendPageLoad, 0);
+  } else {
+    window.addEventListener('load', () => setTimeout(sendPageLoad, 0));
+  }
+} catch (e) {}

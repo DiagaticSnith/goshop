@@ -231,6 +231,7 @@ export const rejectOrder = async (req: Request, res: Response) => {
         } catch (e) {
             // Log but proceed to mark rejected so admin can resolve separately
             console.error('Stripe refund failed for order', id, e);
+            try { (await import('../utils/metrics')).stripeErrors.inc({ type: 'refund' }); } catch (err) {}
         }
 
     const updated = await (prisma as any).order.update({ where: { id }, data: { status: 'REJECTED' } });
