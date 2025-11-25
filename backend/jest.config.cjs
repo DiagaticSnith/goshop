@@ -4,5 +4,6 @@ module.exports = {
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   collectCoverage: true,
-  coverageDirectory: '<rootDir>/coverage'
+  coverageDirectory: '<rootDir>/coverage',
+  setupFiles: ['<rootDir>/jest.setup.js']
 };

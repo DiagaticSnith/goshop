@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1764064367118" clover="3.2.0">
-  <project timestamp="1764064367118" name="All files">
-    <metrics statements="244" coveredstatements="218" conditionals="186" coveredconditionals="122" methods="39" coveredmethods="35" elements="469" coveredelements="375" complexity="0" loc="244" ncloc="244" packages="4" files="8" classes="8"/>
+<coverage generated="1764068157399" clover="3.2.0">
+  <project timestamp="1764068157400" name="All files">
+    <metrics statements="244" coveredstatements="217" conditionals="186" coveredconditionals="121" methods="39" coveredmethods="35" elements="469" coveredelements="373" complexity="0" loc="244" ncloc="244" packages="4" files="8" classes="8"/>
     <package name="config">
-      <metrics statements="16" coveredstatements="15" conditionals="5" coveredconditionals="4" methods="0" coveredmethods="0"/>
+      <metrics statements="16" coveredstatements="14" conditionals="5" coveredconditionals="3" methods="0" coveredmethods="0"/>
       <file name="firebase.ts" path="D:\All Projects\goshop\backend\src\config\firebase.ts">
         <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="1" count="12" type="stmt"/>
@@ -14,12 +14,12 @@
         <line num="23" count="12" type="stmt"/>
       </file>
       <file name="prisma-client.ts" path="D:\All Projects\goshop\backend\src\config\prisma-client.ts">
-        <metrics statements="7" coveredstatements="6" conditionals="3" coveredconditionals="2" methods="0" coveredmethods="0"/>
+        <metrics statements="7" coveredstatements="5" conditionals="3" coveredconditionals="1" methods="0" coveredmethods="0"/>
         <line num="1" count="43" type="stmt"/>
         <line num="8" count="43" type="cond" truecount="1" falsecount="1"/>
         <line num="9" count="0" type="stmt"/>
-        <line num="13" count="43" type="cond" truecount="1" falsecount="0"/>
-        <line num="14" count="3" type="stmt"/>
+        <line num="13" count="43" type="cond" truecount="0" falsecount="1"/>
+        <line num="14" count="0" type="stmt"/>
         <line num="18" count="43" type="stmt"/>
         <line num="21" count="43" type="stmt"/>
       </file>
