@@ -12,7 +12,7 @@ const getBackendBaseUrl = () => {
         const protocol = window.location.protocol || 'http:';
         const hostname = window.location.hostname || 'localhost';
         if (hostname.startsWith('user-')) {
-            const forced = 'https://goshop-production-d095.up.railway.app';
+            const forced = 'https://backend-production-9be7.up.railway.app';
             console.warn('[api] runtime fallback mapping user-* ->', forced, '(temporary)');
             return forced;
         }
