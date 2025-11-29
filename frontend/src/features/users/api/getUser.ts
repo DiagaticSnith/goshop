@@ -12,6 +12,7 @@ const getUserByFirebaseId = (firebaseId: string, token: string): Promise<IUser> 
 export const useGetUserQuery = (firebaseId: string, token: string) => {
     return useQuery({
         queryKey: ["users", firebaseId],
-        queryFn: () => getUserByFirebaseId(firebaseId, token)
+        queryFn: () => getUserByFirebaseId(firebaseId, token),
+        enabled: Boolean(firebaseId)
     });
 };
