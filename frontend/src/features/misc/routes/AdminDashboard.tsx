@@ -9,7 +9,6 @@ import { useGetAllOrdersQuery, OrdersListParams } from "../../orders/api/getAllO
 import { OrderPreview } from "../../orders/components/OrderPreview";
 import { useAuth } from "../../../context/AuthContext";
 import { useGetOrdersStatsQuery } from "../../orders/api/getOrdersStats";
-import { useGetOrdersReportQuery, exportOrdersReport } from "../../reports/api";
 
 const MiniLine = ({ points, color = "#3b82f6" }: { points?: number[]; color?: string }) => {
     const width = 240; const height = 60;
@@ -107,36 +106,6 @@ export const AdminDashboard = () => {
 
     const { data: ordersResp, isLoading: ordersLoading } = useGetAllOrdersQuery(token || "", isAdmin, ordersParams);
 
-    // Reports state
-    const [reportType, setReportType] = React.useState<'revenue'|'top_products'|'by_status'>('revenue');
-    const [reportFrom, setReportFrom] = React.useState<string | undefined>(undefined);
-    const [reportTo, setReportTo] = React.useState<string | undefined>(undefined);
-    const [groupBy, setGroupBy] = React.useState<'day'|'week'|'month'>('day');
-    const [reportLimit, setReportLimit] = React.useState<number>(10);
-    const [reportParams, setReportParams] = React.useState<any | null>(null);
-
-    const reportQuery = useGetOrdersReportQuery(token || "", reportParams);
-
-    const handleExport = async () => {
-        if (!token) return;
-        try {
-            const body = reportParams || { type: reportType, from: reportFrom, to: reportTo, groupBy, limit: reportLimit };
-            const resp = await exportOrdersReport(token || "", body);
-            const blob = new Blob([resp.data], { type: resp.headers['content-type'] || 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = resp.headers['content-disposition']?.split('filename=')[1] || 'report.csv';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-        } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error('export failed', e);
-        }
-    };
-
     // client-side guard: wait until role is resolved; only deny when explicitly false
     if (isAdmin === undefined) {
         return (
@@ -216,69 +185,6 @@ export const AdminDashboard = () => {
                                 </div>
                             )}
                             <AdminOrdersStats token={token} isAdmin={isAdmin} />
-
-                            {/* Reports panel */}
-                            <div className="bg-white rounded-md drop-shadow-custom p-4 mt-6">
-                                <h4 className="font-semibold mb-3">Order Reports</h4>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <select id="reportType" defaultValue="revenue" onChange={(e) => setReportType(e.target.value as any)} className="px-2 py-1 border rounded-md">
-                                        <option value="revenue">Revenue</option>
-                                        <option value="top_products">Top Products</option>
-                                        <option value="by_status">Orders by Status</option>
-                                    </select>
-                                    <label className="text-sm">From</label>
-                                    <input type="date" value={reportFrom || ''} onChange={(e) => setReportFrom(e.target.value || undefined)} className="px-2 py-1 border rounded-md" />
-                                    <label className="text-sm">To</label>
-                                    <input type="date" value={reportTo || ''} onChange={(e) => setReportTo(e.target.value || undefined)} className="px-2 py-1 border rounded-md" />
-                                    {reportType === 'revenue' && (
-                                        <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} className="px-2 py-1 border rounded-md">
-                                            <option value="day">Day</option>
-                                            <option value="week">Week</option>
-                                            <option value="month">Month</option>
-                                        </select>
-                                    )}
-                                    <button onClick={() => setReportParams({ type: reportType as any, from: reportFrom, to: reportTo, groupBy, limit: reportLimit })} className="px-3 py-1 bg-primary text-white rounded">Generate</button>
-                                    <button onClick={handleExport} className="px-3 py-1 border rounded">Export CSV</button>
-                                </div>
-
-                                <div>
-                                    {reportQuery?.isLoading && <div>Loading report…</div>}
-                                    {reportQuery?.data && reportParams?.type === 'revenue' && (
-                                        <div>
-                                            <h5 className="font-medium mb-2">Revenue ({reportParams.from || 'N/A'} → {reportParams.to || 'N/A'})</h5>
-                                            <MiniLine points={Array.isArray(reportQuery.data.data) ? reportQuery.data.data.map((d:any)=>d.revenue) : []} />
-                                            <ul className="mt-2 text-sm text-secondary">
-                                                {Array.isArray(reportQuery.data.data) && reportQuery.data.data.map((d:any) => (
-                                                    <li key={d.label} className="flex justify-between"><span>{d.label}</span><span>${(d.revenue||0).toFixed(2)} ({d.orders} orders)</span></li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                    {reportQuery?.data && reportParams?.type === 'top_products' && (
-                                        <div>
-                                            <h5 className="font-medium mb-2">Top Products</h5>
-                                            <table className="w-full text-sm">
-                                                <thead><tr><th className="text-left">Product</th><th>Qty</th><th>Revenue</th></tr></thead>
-                                                <tbody>
-                                                    {Array.isArray(reportQuery.data.data) && reportQuery.data.data.map((p:any) => (
-                                                        <tr key={p.productId}><td>{p.name}</td><td className="text-center">{p.sold}</td><td className="text-right">${(p.revenue||0).toFixed(2)}</td></tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                    {reportQuery?.data && reportParams?.type === 'by_status' && (
-                                        <div>
-                                            <h5 className="font-medium mb-2">Orders by status</h5>
-                                            <ul>
-                                                {Array.isArray(reportQuery.data.data) && reportQuery.data.data.map((s:any) => (
-                                                    <li key={s.status}>{s.status}: {s.count}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
 
                             {/* Orders UI directly under stats as requested */}
                             <div className="mt-6 space-y-4">

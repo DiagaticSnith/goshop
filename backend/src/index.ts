@@ -174,8 +174,6 @@ app.use("/auth", authRoutes);
 app.use("/category", categoryRoutes);
 // Support both singular and plural category routes for compatibility with frontend bundles
 app.use("/categories", categoryRoutes);
-import reportsRoutes from "./routes/reports";
-app.use("/admin/reports", reportsRoutes);
 
 app.use(errorMiddleware);
 
