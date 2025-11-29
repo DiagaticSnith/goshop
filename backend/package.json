@@ -1,7 +1,9 @@
 {
   "scripts": {
     "build": "npx tsc",
-    "test": "jest --coverage --runInBand",
+    "test:unit": "cross-env JEST_SUITE=unit jest --config jest.config.cjs --coverage --runInBand --testPathPattern=src/tests/unit",
+    "test:integration": "cross-env JEST_SUITE=integration jest --config jest.config.cjs --coverage --runInBand --testPathPattern=src/tests/integration",
+    "test": "echo \"Running unit tests...\" && npm run test:unit ; echo \"Running integration tests...\" && npm run test:integration",
     "test:watch": "jest --watch",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "server": "npx nodemon",
