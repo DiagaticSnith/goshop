@@ -58,27 +58,37 @@ const CartProductView = (props: CartItemProp) => {
     }, [token, dispatch]);
 
     const [localQty, setLocalQty] = useState<number>(props.quantity);
+    const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
     useEffect(() => {
         setLocalQty(props.quantity);
     }, [props.quantity]);
 
     const updateQuantity = async (newQuantity: number) => {
+        // ignore clicks while an update is in-flight
+        if (isUpdating) return;
+
         // enforce minimum of 1
         if (newQuantity < 1) newQuantity = 1;
         // enforce max by stock
         if (props.product.stockQuantity && newQuantity > props.product.stockQuantity) {
             newQuantity = props.product.stockQuantity;
         }
-        // optimistic local update
+
+        // optimistic local update for immediate UI feedback
+        setLocalQty(newQuantity);
         dispatch(addToCart({ product: props.product, quantity: newQuantity }));
-        if (token) {
-            try {
-                await cartApi.addOrUpdateCartItem(token, props.product.id, newQuantity);
-                await syncServerCart();
-            } catch (e) {
-                console.error('update quantity failed', e);
-            }
+
+        if (!token) return;
+
+        setIsUpdating(true);
+        try {
+            await cartApi.addOrUpdateCartItem(token, props.product.id, newQuantity);
+            await syncServerCart();
+        } catch (e) {
+            console.error('update quantity failed', e);
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -134,28 +144,16 @@ const CartProductView = (props: CartItemProp) => {
                                 className="px-3 py-2 text-lg"
                                 onClick={() => updateQuantity(localQty - 1)}
                                 aria-label="Decrease quantity"
-                                disabled={localQty <= 1}
+                                disabled={localQty <= 1 || isUpdating}
                             >
                                 -
                             </button>
-                            <input
-                                type="number"
-                                min={1}
-                                max={props.product.stockQuantity}
-                                value={localQty}
-                                onChange={(e) => {
-                                    const v = Number(e.target.value);
-                                    if (Number.isNaN(v)) return;
-                                    setLocalQty(v);
-                                }}
-                                onBlur={() => updateQuantity(localQty)}
-                                className="w-16 text-center px-2 py-1 border-l border-r"
-                            />
+                            <div className="px-4 select-none">{localQty}</div>
                             <button
                                 className="px-3 py-2 text-lg"
                                 onClick={() => updateQuantity(localQty + 1)}
                                 aria-label="Increase quantity"
-                                disabled={localQty >= props.product.stockQuantity}
+                                disabled={localQty >= props.product.stockQuantity || isUpdating}
                             >
                                 +
                             </button>
