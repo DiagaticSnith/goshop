@@ -22,6 +22,7 @@ import {
   LabelList,
   LineChart,
 } from 'recharts';
+import ReportsPanel from '../../../features/reports/components/ReportsPanel';
 
 type DayStat = { date: string; count: number; revenue: number };
 
@@ -136,6 +137,7 @@ export default function Overview() {
 
   // Controls for line chart granularity
   const [granularity, setGranularity] = useState<'day'|'week'|'month'>('day');
+  const [selectedChart, setSelectedChart] = useState<'none'|'revenue'|'categories'|'status'|'top_products'>('none');
 
   // Aggregations
   const revenueSeries = useMemo(() => {
@@ -298,60 +300,83 @@ export default function Overview() {
         <div className="ml-auto text-sm text-gray-600">Showing {stats.length} days</div>
       </div>
 
+      <div className="mb-4 flex items-center gap-2">
+        <label className="text-sm text-gray-600">Show</label>
+        <select value={selectedChart} onChange={e => setSelectedChart(e.target.value as any)} className="border rounded px-2 py-1 text-sm">
+          <option value="none">— Select chart —</option>
+          <option value="revenue">Revenue</option>
+          <option value="categories">Categories</option>
+          <option value="status">Order status</option>
+          <option value="top_products">Top products</option>
+        </select>
+        <button className="ml-2 px-2 py-1 text-sm border rounded" onClick={() => setSelectedChart('none')}>Clear</button>
+      </div>
+
+      {isAdmin && token && (
+        <div className="mb-6">
+          <ReportsPanel token={token} />
+        </div>
+      )}
+
       <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-  <div className="p-4 bg-white rounded-lg drop-shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-600">Doanh thu</div>
-            <div className="flex items-center gap-2">
-              <select value={granularity} onChange={e => setGranularity(e.target.value as any)} className="border px-2 py-1 rounded">
-                <option value="day">Theo ngày</option>
-                <option value="week">Theo tuần</option>
-                <option value="month">Theo tháng</option>
-              </select>
+        {selectedChart === 'revenue' && (
+          <div className="p-4 bg-white rounded-lg drop-shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-600">Doanh thu</div>
+              <div className="flex items-center gap-2">
+                <select value={granularity} onChange={e => setGranularity(e.target.value as any)} className="border px-2 py-1 rounded">
+                  <option value="day">Theo ngày</option>
+                  <option value="week">Theo tuần</option>
+                  <option value="month">Theo tháng</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ width: '100%', height: 320 }}>
+              <ResponsiveContainer>
+                <LineChart data={revenueSeries}>
+                  <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis tickFormatter={(v) => fmtCurrency(Number(v))} tick={{ fontSize: 12 }} />
+                  <Tooltip formatter={(v:any)=>fmtCurrency(Number(v))} />
+                  <Line type="monotone" dataKey="revenue" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+                  <Brush dataKey="date" height={30} stroke="#8884d8" />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div style={{ width: '100%', height: 320 }}>
-            <ResponsiveContainer>
-              <LineChart data={revenueSeries}>
-                <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={(v) => fmtCurrency(Number(v))} tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v:any)=>fmtCurrency(Number(v))} />
-                <Line type="monotone" dataKey="revenue" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                <Brush dataKey="date" height={30} stroke="#8884d8" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        )}
 
-  <div className="p-4 bg-white rounded-lg drop-shadow-sm">
-          <div className="text-sm text-gray-600 mb-2">Số đơn theo loại sản phẩm</div>
-          <div style={{ width: '100%', height: 320 }}>
-            <ResponsiveContainer>
-              <BarChart data={ordersByCategoryWithColor} margin={{ top: 10, right: 10, left: -10, bottom: 30 }}>
-                <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 12, fontStyle: 'normal' }}
-                  interval={0}
-                  // render labels in lowercase and keep them horizontal
-                  tickFormatter={(v: any) => String(v).toLowerCase()}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value:any) => [value, 'count']} />
-                <Bar dataKey="count">
-                  {ordersByCategoryWithColor.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                  <LabelList dataKey="count" position="top" />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        {selectedChart === 'categories' && (
+          <div className="p-4 bg-white rounded-lg drop-shadow-sm">
+            <div className="text-sm text-gray-600 mb-2">Số đơn theo loại sản phẩm</div>
+            <div style={{ width: '100%', height: 320 }}>
+              <ResponsiveContainer>
+                <BarChart data={ordersByCategoryWithColor} margin={{ top: 10, right: 10, left: -10, bottom: 30 }}>
+                  <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12, fontStyle: 'normal' }}
+                    interval={0}
+                    // render labels in lowercase and keep them horizontal
+                    tickFormatter={(v: any) => String(v).toLowerCase()}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip formatter={(value:any) => [value, 'count']} />
+                  <Bar dataKey="count">
+                    {ordersByCategoryWithColor.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                    <LabelList dataKey="count" position="top" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {selectedChart === 'status' && (
         <div className="p-4 bg-white rounded-lg drop-shadow-sm relative">
           <div className="text-sm text-gray-600 mb-2">Tỷ lệ trạng thái đơn</div>
           <div style={{ width: '100%', height: 280 }}>
@@ -375,7 +400,9 @@ export default function Overview() {
             </div>
           </div>
         </div>
+        )}
 
+        {selectedChart === 'top_products' && (
         <div className="p-4 bg-white rounded-lg">
           <div className="text-sm text-gray-600 mb-2">Top 5 sản phẩm bán chạy</div>
           <div className="overflow-auto">
@@ -395,6 +422,7 @@ export default function Overview() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       <div className="mt-4">

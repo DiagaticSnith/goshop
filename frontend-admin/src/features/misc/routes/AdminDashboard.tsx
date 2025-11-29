@@ -7,7 +7,6 @@ import { useAuth } from "../../../context/AuthContext";
 import AdminUsers from "../../../features/users/components/AdminUsers";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ManageCategories } from "../../../features/category";
-const ReportsPanel = React.lazy(() => import("../../reports/components/ReportsPanel"));
 
 export const AdminDashboard = () => {
 	const { isAdmin, token } = useAuth();
@@ -70,9 +69,7 @@ export const AdminDashboard = () => {
 					<button className={`px-3 py-1 rounded ${isActive("orders")}`} onClick={() => setTab("orders")}>
 						Orders
 					</button>
-					<button className={`px-3 py-1 rounded ${isActive("reports")}`} onClick={() => setTab("reports")}>
-						Reports
-					</button>
+					{/* Reports tab removed per UX request */}
 				</div>
 
 				{/* Panel */}
@@ -101,13 +98,7 @@ export const AdminDashboard = () => {
 						<AdminOrdersDashboard />
 					</section>
 				)}
-				{tab === "reports" && (
-					<section>
-						<React.Suspense fallback={<div>Loading reports…</div>}>
-							<ReportsPanel token={(useAuth() as any).token} />
-						</React.Suspense>
-					</section>
-				)}
+				{/* Reports tab removed: reporting is now available inside Overview */}
 			</div>
 		</div>
 	);
