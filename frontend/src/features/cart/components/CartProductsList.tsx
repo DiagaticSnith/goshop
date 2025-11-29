@@ -5,7 +5,7 @@ import { RxCross1 } from "react-icons/rx";
 import { BsCartX } from "react-icons/bs";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../app/store";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { FcCheckmark } from "react-icons/fc";
 import { addToCart, removeFromCart, setCart } from "../cartSlice";
 import { useAuth } from "../../../context/AuthContext";
@@ -57,20 +57,18 @@ const CartProductView = (props: CartItemProp) => {
         }
     }, [token, dispatch]);
 
+    const [localQty, setLocalQty] = useState<number>(props.quantity);
+
+    useEffect(() => {
+        setLocalQty(props.quantity);
+    }, [props.quantity]);
+
     const updateQuantity = async (newQuantity: number) => {
-        if (newQuantity <= 0) {
-            // remove if quantity goes to 0
-            dispatch(removeFromCart({ id: props.product.id }));
-            if (token) {
-                // find cart item id from latest server cart
-                try {
-                    const serverCart = await cartApi.getCart(token);
-                    const toRemove = (serverCart.items || []).find((it: any) => it.productId === props.product.id);
-                    if (toRemove) await cartApi.removeCartItem(token, toRemove.id);
-                    await syncServerCart();
-                } catch (e) { console.error('remove item failed', e); }
-            }
-            return;
+        // enforce minimum of 1
+        if (newQuantity < 1) newQuantity = 1;
+        // enforce max by stock
+        if (props.product.stockQuantity && newQuantity > props.product.stockQuantity) {
+            newQuantity = props.product.stockQuantity;
         }
         // optimistic local update
         dispatch(addToCart({ product: props.product, quantity: newQuantity }));
@@ -134,17 +132,30 @@ const CartProductView = (props: CartItemProp) => {
                         <div className="inline-flex items-center border rounded-md overflow-hidden">
                             <button
                                 className="px-3 py-2 text-lg"
-                                onClick={() => updateQuantity(props.quantity - 1)}
+                                onClick={() => updateQuantity(localQty - 1)}
                                 aria-label="Decrease quantity"
+                                disabled={localQty <= 1}
                             >
                                 -
                             </button>
-                            <div className="px-4 select-none">{props.quantity}</div>
+                            <input
+                                type="number"
+                                min={1}
+                                max={props.product.stockQuantity}
+                                value={localQty}
+                                onChange={(e) => {
+                                    const v = Number(e.target.value);
+                                    if (Number.isNaN(v)) return;
+                                    setLocalQty(v);
+                                }}
+                                onBlur={() => updateQuantity(localQty)}
+                                className="w-16 text-center px-2 py-1 border-l border-r"
+                            />
                             <button
                                 className="px-3 py-2 text-lg"
-                                onClick={() => updateQuantity(props.quantity + 1)}
+                                onClick={() => updateQuantity(localQty + 1)}
                                 aria-label="Increase quantity"
-                                disabled={props.quantity >= props.product.stockQuantity}
+                                disabled={localQty >= props.product.stockQuantity}
                             >
                                 +
                             </button>
