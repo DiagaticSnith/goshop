@@ -245,6 +245,40 @@ export default function Overview() {
 
   const fmtCurrency = (v: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(v);
 
+  const downloadCSV = (csv: string, filename: string) => {
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  };
+
+  const handleExportSelectedChart = () => {
+    if (selectedChart === 'revenue') {
+      const rows = (revenueSeries || []).map(r => `${r.date},${(r.revenue||0).toFixed(2)}`).join('\n');
+      const csv = 'Date,Revenue\n' + rows;
+      downloadCSV(csv, `revenue_${from}_${to}.csv`);
+      return;
+    }
+    if (selectedChart === 'categories') {
+      const rows = (ordersByCategory || []).map(c => `${JSON.stringify(c.name)},${c.count}`).join('\n');
+      const csv = 'Category,Count\n' + rows;
+      downloadCSV(csv, `categories_${from}_${to}.csv`);
+      return;
+    }
+    if (selectedChart === 'status') {
+      const rows = (statusPie || []).map(s => `${s.name},${s.value}`).join('\n');
+      const csv = 'Status,Count\n' + rows;
+      downloadCSV(csv, `order_status_${from}_${to}.csv`);
+      return;
+    }
+    if (selectedChart === 'top_products') {
+      const rows = (topProducts || []).map(p => `${JSON.stringify(p.name)},${p.qty}`).join('\n');
+      const csv = 'Product,Qty\n' + rows;
+      downloadCSV(csv, `top_products_${from}_${to}.csv`);
+      return;
+    }
+  };
+
   return (
     <div className="mt-4 p-5 bg-white drop-shadow-custom rounded-md h-full">
       <h3 className="text-lg font-semibold mb-4">Overview</h3>
@@ -312,118 +346,97 @@ export default function Overview() {
         <button className="ml-2 px-2 py-1 text-sm border rounded" onClick={() => setSelectedChart('none')}>Clear</button>
       </div>
 
-      {isAdmin && token && (
-        <div className="mb-6">
-          <ReportsPanel token={token} />
-        </div>
-      )}
-
-      <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {selectedChart === 'revenue' && (
-          <div className="p-4 bg-white rounded-lg drop-shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-600">Doanh thu</div>
+      {selectedChart !== 'none' ? (
+        <div className="mb-6 flex justify-center">
+          <div className="w-full lg:w-3/4 bg-white rounded-lg p-4 drop-shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-gray-600">
+                {selectedChart === 'revenue' ? 'Doanh thu' : selectedChart === 'categories' ? 'Số đơn theo loại sản phẩm' : selectedChart === 'status' ? 'Tỷ lệ trạng thái đơn' : 'Top sản phẩm'}
+              </div>
               <div className="flex items-center gap-2">
-                <select value={granularity} onChange={e => setGranularity(e.target.value as any)} className="border px-2 py-1 rounded">
-                  <option value="day">Theo ngày</option>
-                  <option value="week">Theo tuần</option>
-                  <option value="month">Theo tháng</option>
-                </select>
+                {selectedChart === 'revenue' && (
+                  <select value={granularity} onChange={e => setGranularity(e.target.value as any)} className="border px-2 py-1 rounded">
+                    <option value="day">Theo ngày</option>
+                    <option value="week">Theo tuần</option>
+                    <option value="month">Theo tháng</option>
+                  </select>
+                )}
+                <button onClick={handleExportSelectedChart} className="px-3 py-1 border rounded">Export CSV</button>
               </div>
             </div>
-            <div style={{ width: '100%', height: 320 }}>
-              <ResponsiveContainer>
-                <LineChart data={revenueSeries}>
-                  <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis tickFormatter={(v) => fmtCurrency(Number(v))} tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v:any)=>fmtCurrency(Number(v))} />
-                  <Line type="monotone" dataKey="revenue" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                  <Brush dataKey="date" height={30} stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
 
-        {selectedChart === 'categories' && (
-          <div className="p-4 bg-white rounded-lg drop-shadow-sm">
-            <div className="text-sm text-gray-600 mb-2">Số đơn theo loại sản phẩm</div>
-            <div style={{ width: '100%', height: 320 }}>
-              <ResponsiveContainer>
-                <BarChart data={ordersByCategoryWithColor} margin={{ top: 10, right: 10, left: -10, bottom: 30 }}>
-                  <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 12, fontStyle: 'normal' }}
-                    interval={0}
-                    // render labels in lowercase and keep them horizontal
-                    tickFormatter={(v: any) => String(v).toLowerCase()}
-                  />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value:any) => [value, 'count']} />
-                  <Bar dataKey="count">
-                    {ordersByCategoryWithColor.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                    <LabelList dataKey="count" position="top" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-      </div>
+            <div style={{ width: '100%', height: 460 }}>
+              {selectedChart === 'revenue' && (
+                <ResponsiveContainer>
+                  <LineChart data={revenueSeries}>
+                    <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => fmtCurrency(Number(v))} tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(v:any)=>fmtCurrency(Number(v))} />
+                    <Line type="monotone" dataKey="revenue" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+                    <Brush dataKey="date" height={30} stroke="#8884d8" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
 
-      <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {selectedChart === 'status' && (
-        <div className="p-4 bg-white rounded-lg drop-shadow-sm relative">
-          <div className="text-sm text-gray-600 mb-2">Tỷ lệ trạng thái đơn</div>
-          <div style={{ width: '100%', height: 280 }}>
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={statusPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={false}>
-                  {statusPie.map((entry, idx) => (
-                    <Cell key={`cell-${idx}`} fill={statusColors[String(entry.name) as keyof typeof statusColors] || '#9ca3af'} stroke="#ffffff" />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend {...({ payload: statusPie.map(e => ({ value: e.name, type: 'square', id: e.name, color: statusColors[String(e.name) as keyof typeof statusColors] || '#9ca3af' })) } as any)} layout="horizontal" verticalAlign="bottom" />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Total</div>
-                <div className="text-xl font-semibold">{totalOrdersInRange}</div>
-                <div className="text-xs text-gray-400">orders</div>
-              </div>
+              {selectedChart === 'categories' && (
+                <ResponsiveContainer>
+                  <BarChart data={ordersByCategoryWithColor} margin={{ top: 10, right: 10, left: -10, bottom: 30 }}>
+                    <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fontStyle: 'normal' }}
+                      interval={0}
+                      tickFormatter={(v: any) => String(v).toLowerCase()}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(value:any) => [value, 'count']} />
+                    <Bar dataKey="count">
+                      {ordersByCategoryWithColor.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                      <LabelList dataKey="count" position="top" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {selectedChart === 'status' && (
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={statusPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={140} label={false}>
+                      {statusPie.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={statusColors[String(entry.name) as keyof typeof statusColors] || '#9ca3af'} stroke="#ffffff" />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend {...({ payload: statusPie.map(e => ({ value: e.name, type: 'square', id: e.name, color: statusColors[String(e.name) as keyof typeof statusColors] || '#9ca3af' })) } as any)} layout="horizontal" verticalAlign="bottom" />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+
+              {selectedChart === 'top_products' && (
+                <div className="overflow-auto h-full">
+                  {topProducts.length === 0 ? (
+                    <div className="text-sm text-gray-500">No data</div>
+                  ) : (
+                    <table className="min-w-full text-sm">
+                      <thead className="text-left text-xs text-gray-500">
+                        <tr><th className="py-2">Product</th><th className="py-2">Qty</th></tr>
+                      </thead>
+                      <tbody>
+                        {topProducts.map(p => (
+                          <tr key={p.id} className="border-t"><td className="py-2">{p.name}</td><td className="py-2">{p.qty}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
-        )}
-
-        {selectedChart === 'top_products' && (
-        <div className="p-4 bg-white rounded-lg">
-          <div className="text-sm text-gray-600 mb-2">Top 5 sản phẩm bán chạy</div>
-          <div className="overflow-auto">
-            {topProducts.length === 0 ? (
-              <div className="text-sm text-gray-500">No data</div>
-            ) : (
-              <table className="min-w-full text-sm">
-                <thead className="text-left text-xs text-gray-500">
-                  <tr><th className="py-2">Product</th><th className="py-2">Qty</th></tr>
-                </thead>
-                <tbody>
-                  {topProducts.map(p => (
-                    <tr key={p.id} className="border-t"><td className="py-2">{p.name}</td><td className="py-2">{p.qty}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-        )}
-      </div>
+      ) : null}
 
       <div className="mt-4">
         <div className="text-sm text-gray-600 mb-2">Order status summary</div>
