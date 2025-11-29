@@ -7,9 +7,10 @@ import { useAuth } from "../../../context/AuthContext";
 import AdminUsers from "../../../features/users/components/AdminUsers";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ManageCategories } from "../../../features/category";
+const ReportsPanel = React.lazy(() => import("../../reports/components/ReportsPanel"));
 
 export const AdminDashboard = () => {
-	const { isAdmin } = useAuth();
+	const { isAdmin, token } = useAuth();
 
 	const navigate = useNavigate();
 
@@ -69,6 +70,9 @@ export const AdminDashboard = () => {
 					<button className={`px-3 py-1 rounded ${isActive("orders")}`} onClick={() => setTab("orders")}>
 						Orders
 					</button>
+					<button className={`px-3 py-1 rounded ${isActive("reports")}`} onClick={() => setTab("reports")}>
+						Reports
+					</button>
 				</div>
 
 				{/* Panel */}
@@ -95,6 +99,13 @@ export const AdminDashboard = () => {
 				{tab === "orders" && (
 					<section className="relative">
 						<AdminOrdersDashboard />
+					</section>
+				)}
+				{tab === "reports" && (
+					<section>
+						<React.Suspense fallback={<div>Loading reports…</div>}>
+							<ReportsPanel token={(useAuth() as any).token} />
+						</React.Suspense>
 					</section>
 				)}
 			</div>
