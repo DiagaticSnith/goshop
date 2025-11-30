@@ -179,31 +179,97 @@ const splitName = (full: string) => {
 
 const EditUserButton: React.FC<{ user: IUser; onUpdated: (u: IUser)=>void }> = ({ user, onUpdated }) => {
 	const { token } = useAuth();
+	const mutation = userApi.useUpdateUserMutation(user.firebaseId, token || '');
 	const [open, setOpen] = React.useState(false);
 	const initial = React.useMemo(() => splitName(user.fullName || ''), [user.fullName]);
 	const [firstName, setFirstName] = React.useState(initial.firstName);
 	const [lastName, setLastName] = React.useState(initial.lastName);
 	const [avatar, setAvatar] = React.useState<File | null>(null);
+	const [phone, setPhone] = React.useState<string>(user.phoneNumber || '');
+	const [address, setAddress] = React.useState<string>(user.address || '');
+	const [preview, setPreview] = React.useState<string>(typeof user.avatar === 'string' ? user.avatar : '');
+
+	React.useEffect(() => {
+		setFirstName(initial.firstName);
+		setLastName(initial.lastName);
+		setPhone(user.phoneNumber || '');
+		setAddress(user.address || '');
+		setPreview(typeof user.avatar === 'string' ? user.avatar : '');
+	}, [user, initial.firstName, initial.lastName]);
+
+	// revoke object URL when avatar changes or component unmounts
+	React.useEffect(() => {
+		return () => {
+			if (preview && preview.startsWith('blob:')) {
+				URL.revokeObjectURL(preview);
+			}
+		};
+	}, [preview]);
 
 	const onSave = async () => {
 		if (!token) return;
 		const form = new FormData();
 		form.append('firstName', firstName);
 		form.append('lastName', lastName);
+		form.append('phone', phone || '');
+		form.append('address', address || '');
 		if (avatar) form.append('avatar', avatar);
-		const updated = await userApi.updateUser(user.firebaseId, form, token);
-		onUpdated(updated.user as any);
-		setOpen(false);
+
+		try {
+			const updated = await mutation.mutateAsync(form);
+			onUpdated(updated.user as any);
+			setOpen(false);
+		} catch (err) {
+			// keep modal open for retry
+		}
+	};
+
+	const onFileChange = (f: File | null) => {
+		// client-side validation: limit to 5MB
+		if (f && f.size > 5 * 1024 * 1024) {
+			alert('Image too large. Maximum 5MB allowed.');
+			return;
+		}
+		setAvatar(f);
+		if (f) {
+			const url = URL.createObjectURL(f);
+			setPreview(url);
+		}
+	};
+
+	// close on ESC and overlay click
+	React.useEffect(() => {
+		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+		if (open) window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, [open]);
+
+	const onOverlayClick = (e: React.MouseEvent) => {
+		if (e.target === e.currentTarget) setOpen(false);
 	};
 
 	return (
 		<>
 			<button onClick={() => setOpen(true)} className="px-3 py-1 border rounded">Edit</button>
 			{open && (
-				<div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-					<div className="bg-white rounded-md p-4 w-[360px]">
-						<h3 className="font-semibold mb-3">Edit user</h3>
-						<div className="space-y-2">
+				<div onClick={onOverlayClick} className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+					<div role="dialog" aria-modal="true" aria-label="Edit user" className="bg-white rounded-md p-4 w-full max-w-md shadow-lg">
+						<div className="flex items-center justify-between">
+							<h3 className="font-semibold text-lg">Edit user</h3>
+							<button onClick={()=>setOpen(false)} className="text-gray-500 hover:text-gray-800">✕</button>
+						</div>
+						<div className="grid grid-cols-2 gap-3 mt-3">
+							<div className="col-span-2 flex items-center gap-3">
+								<div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+									{preview ? <img src={preview} alt="preview" className="w-full h-full object-cover" /> : <span className="text-sm text-gray-400">No image</span>}
+								</div>
+								<div className="flex-1">
+									<label className="text-sm block text-gray-600">Avatar</label>
+									<input type="file" accept="image/*" onChange={e=>onFileChange(e.target.files?.[0] || null)} />
+									<p className="text-xs text-gray-400 mt-1">PNG/JPG up to 5MB</p>
+								</div>
+							</div>
+
 							<div>
 								<label className="text-sm">First name</label>
 								<input value={firstName} onChange={e=>setFirstName(e.target.value)} className="w-full border rounded px-2 py-1" />
@@ -212,14 +278,30 @@ const EditUserButton: React.FC<{ user: IUser; onUpdated: (u: IUser)=>void }> = (
 								<label className="text-sm">Last name</label>
 								<input value={lastName} onChange={e=>setLastName(e.target.value)} className="w-full border rounded px-2 py-1" />
 							</div>
-							<div>
-								<label className="text-sm">Avatar</label>
-								<input type="file" accept="image/*" onChange={e=>setAvatar(e.target.files?.[0] || null)} />
+
+							<div className="col-span-2">
+								<label className="text-sm">Phone number</label>
+								<input value={phone} onChange={e=>setPhone(e.target.value)} className="w-full border rounded px-2 py-1" placeholder="e.g. +84123456789" />
+							</div>
+
+							<div className="col-span-2">
+								<label className="text-sm">Address</label>
+								<textarea value={address} onChange={e=>setAddress(e.target.value)} className="w-full border rounded px-2 py-1" rows={3} />
 							</div>
 						</div>
-						<div className="mt-4 flex justify-end gap-2">
-							<button onClick={()=>setOpen(false)} className="px-3 py-1 border rounded">Cancel</button>
-							<button onClick={onSave} className="px-3 py-1 bg-primary text-white rounded">Save</button>
+
+						<div className="mt-4 flex justify-between items-center gap-2">
+							<div className="text-sm text-gray-500">{mutation.isLoading ? 'Saving changes…' : ''}</div>
+							<div className="flex items-center gap-2">
+								<button onClick={()=>setOpen(false)} className="px-3 py-1 border rounded bg-white">Cancel</button>
+								<button
+									onClick={onSave}
+									disabled={mutation.isLoading || (!avatar && firstName === initial.firstName && lastName === initial.lastName && phone === (user.phoneNumber || '') && address === (user.address || ''))}
+									className="px-3 py-1 bg-primary text-white rounded disabled:opacity-60"
+								>
+									{mutation.isLoading ? 'Saving...' : 'Save'}
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
