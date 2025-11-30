@@ -26,16 +26,14 @@ app.use((req, res, next) => {
     try { inFlightRequests.inc(); } catch (e) {}
         const start = Date.now();
 
-        // track bytes received on request (supports chunked bodies and content-length)
+        // track bytes received on request using Content-Length when available.
+        // NOTE: do NOT attach a 'data' listener here because consuming the request
+        // stream will interfere with downstream multipart parsers (multer/busboy).
         let reqBytes = 0;
         try {
             const cl = req.headers['content-length'];
             if (cl) reqBytes = Number(cl) || 0;
         } catch (e) { reqBytes = 0; }
-        // also listen to data events for more accurate counts when available
-        req.on && req.on('data', (chunk: any) => {
-            try { reqBytes += (chunk && chunk.length) || 0; } catch (e) {}
-        });
 
         // Wrap response write/end to count bytes sent
         let resBytes = 0;
