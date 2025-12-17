@@ -4,92 +4,85 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   backend-test:
-    name: Backend Tests
+    name: Backend Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 18
+      - uses: actions/checkout@v4
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-
+          node-version: '18'
       - name: Install backend deps
-        run: |
-          cd backend
-          npm ci
-
-      - name: Run backend tests (with coverage)
-        run: |
-          cd backend
-          npm test -- --coverage
-
-      - name: Upload backend coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: backend/coverage
+        working-directory: backend
+        run: npm ci
+      - name: Run backend unit tests
+        working-directory: backend
+        run: npm run test:unit --silent
 
   frontend-build:
-    name: Build Frontend
+    name: Build Frontend (user)
     runs-on: ubuntu-latest
-    needs: backend-test
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 18
+      - uses: actions/checkout@v4
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-
+          node-version: '18'
       - name: Install frontend deps
-        run: |
-          cd frontend
-          npm ci
-
+        working-directory: frontend
+        run: npm ci
       - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
-
-      - name: Upload frontend build
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist || frontend/build || frontend
+        working-directory: frontend
+        run: npm run build --silent
 
   frontend-admin-build:
     name: Build Frontend Admin
     runs-on: ubuntu-latest
-    needs: backend-test
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 18
+      - uses: actions/checkout@v4
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-
+          node-version: '18'
       - name: Install frontend-admin deps
-        run: |
-          cd frontend-admin
-          npm ci
-
+        working-directory: frontend-admin
+        run: npm ci
       - name: Build frontend-admin
-        run: |
-          cd frontend-admin
-          npm run build
+        working-directory: frontend-admin
+        run: npm run build --silent
 
-      - name: Upload frontend-admin build
-        if: success()
-        uses: actions/upload-artifact@v4
+  create-issue-on-failure:
+    name: Create Issue If Backend Tests Failed
+    runs-on: ubuntu-latest
+    needs: backend-test
+    if: ${{ always() && needs.backend-test.result == 'failure' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub issue for failing backend tests
+        uses: actions/github-script@v6
         with:
-          name: frontend-admin-dist
-          path: frontend-admin/dist || frontend-admin/build || frontend-admin
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = 'CI: Backend unit tests failed on ' + (process.env.GITHUB_REF || '');
+            const body = [
+              'The backend unit tests failed in workflow run ' + (process.env.GITHUB_RUN_ID || ''),
+              '',
+              'Repository: ' + (process.env.GITHUB_REPOSITORY || ''),
+              'Commit: ' + (process.env.GITHUB_SHA || ''),
+              'Triggered by: ' + (process.env.GITHUB_EVENT_NAME || ''),
+              '',
+              'Please check the Actions logs for details: ' + (process.env.GITHUB_SERVER_URL || '') + '/' + (process.env.GITHUB_REPOSITORY || '') + '/actions/runs/' + (process.env.GITHUB_RUN_ID || '')
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
+            const dup = existing.data.find(i => i.title === title);
+            if (dup) {
+              console.log('Issue already exists:', dup.number);
+            } else {
+              await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body });
+            }

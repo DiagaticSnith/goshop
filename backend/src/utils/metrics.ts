@@ -2,7 +2,11 @@ import client from 'prom-client';
 
 // Create registry and collect defaults
 export const register = new client.Registry();
-client.collectDefaultMetrics({ register });
+// Disable collecting default metrics when running tests to avoid open interval handles
+// that prevent Jest from exiting. Can be overridden by DISABLE_PROM_DEFAULT env var.
+if (process.env.NODE_ENV !== 'test' && process.env.DISABLE_PROM_DEFAULT !== 'true') {
+  client.collectDefaultMetrics({ register });
+}
 
 // HTTP metrics
 export const httpRequestCounter = new client.Counter({

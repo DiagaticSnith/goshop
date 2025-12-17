@@ -10,7 +10,17 @@ if (process.env.NODE_ENV === "prod") {
         errorFormat: "minimal"
     });
 } else {
-    if (!global.prisma) {
+    // If a test or other code injected a fake `global.prisma`, ensure it looks like a PrismaClient.
+    const isValidPrisma = (g: any) => {
+        try {
+            if (!g) return false;
+            if (g.__isMock === true) return true;
+            return (typeof g.$connect === 'function' || typeof g.$queryRaw === 'function') && typeof (g.product ?? {}).deleteMany === 'function';
+        } catch (e) {
+            return false;
+        }
+    };
+    if (!global.prisma || !isValidPrisma(global.prisma)) {
         global.prisma = new PrismaClient({
             errorFormat: "minimal"
         });

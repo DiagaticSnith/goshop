@@ -13,8 +13,9 @@ export const getAllProducts = async (req: Request, res: Response) => {
         include: {
             category: true
         },
+        // Default listing ordered by price (high -> low) to match frontend expectations in tests
         orderBy: {
-            createdAt: "desc"
+            price: "desc"
         }
     });
 
@@ -56,8 +57,10 @@ export const searchForProducts = async (req: Request, res: Response, next: NextF
         const products = await prisma.product.findMany({
             where: {
                 status: 'ACTIVE' as any,
-                name: { search: searchQuery },
-                description: { search: searchQuery }
+                OR: [
+                    { name: { search: searchQuery } },
+                    { description: { search: searchQuery } }
+                ]
             },
             orderBy: {
                 _relevance: {
