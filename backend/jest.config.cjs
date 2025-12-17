@@ -13,5 +13,8 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   collectCoverage: true,
   coverageDirectory: '<rootDir>/coverage',
+  // Force exit to avoid Jest hanging on rare background handles during CI/local runs.
+  // This is a pragmatic mitigation; we still recommend tracking down root causes.
+  forceExit: true,
   setupFiles: ['<rootDir>/jest.setup.js']
 };

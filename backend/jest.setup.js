@@ -213,28 +213,52 @@ if (process.env.JEST_SUITE === 'unit') {
 // (Leave default console behavior otherwise.)
 
 // Global cleanup to help Jest exit cleanly: disconnect prisma and clear prom-client registry
-if (typeof afterAll === 'function') {
-  afterAll(async () => {
-    try {
-      // disconnect prisma if available
-      const p = global.prisma || global.PrismaClient || undefined;
-      if (p && typeof p.$disconnect === 'function') {
-        await p.$disconnect();
-      } else if (global.prisma && typeof global.prisma.$disconnect === 'function') {
-        await global.prisma.$disconnect();
-      }
-    } catch (e) {
-      // ignore
+// setupFiles run before Jest provides test lifecycle globals, so register process
+// handlers to ensure cleanup runs even when afterAll isn't available.
+const __jest_setup_cleanup = async () => {
+  try {
+    const p = global.prisma || global.PrismaClient || undefined;
+    if (p && typeof p.$disconnect === 'function') {
+      // call disconnect, don't await to avoid blocking exit handler
+      try { p.$disconnect(); } catch (e) {}
+    } else if (global.prisma && typeof global.prisma.$disconnect === 'function') {
+      try { global.prisma.$disconnect(); } catch (e) {}
     }
+  } catch (e) {
+    // ignore
+  }
 
-    try {
-      // clear prom-client registry if present to remove internal intervals
-      const metrics = require('./src/utils/metrics');
-      if (metrics && metrics.register && typeof metrics.register.clear === 'function') {
-        metrics.register.clear();
-      }
-    } catch (e) {
-      // ignore
+  try {
+    const metrics = require('./src/utils/metrics');
+    if (metrics && metrics.register && typeof metrics.register.clear === 'function') {
+      metrics.register.clear();
     }
-  });
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    if (typeof process._getActiveHandles === 'function') {
+      const handles = process._getActiveHandles();
+      try {
+        const types = handles.map(h => (h && h.constructor && h.constructor.name) || typeof h);
+        console.info('jest.setup: activeHandles:', types);
+      } catch (err) {}
+      console.info('jest.setup: rawActiveHandlesCount=', handles.length);
+    }
+    if (typeof process._getActiveRequests === 'function') {
+      const reqs = process._getActiveRequests();
+      console.info('jest.setup: activeRequestsCount=', reqs.length || 0);
+    }
+  } catch (e) {
+    // ignore
+  }
+};
+
+process.on('beforeExit', () => { __jest_setup_cleanup(); });
+process.on('exit', () => { try { __jest_setup_cleanup(); } catch (e) {} });
+
+// Also register afterAll if available (for environments that provide it)
+if (typeof afterAll === 'function') {
+  afterAll(async () => { await __jest_setup_cleanup(); });
 }
