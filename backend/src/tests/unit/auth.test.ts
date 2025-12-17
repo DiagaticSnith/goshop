@@ -2,7 +2,7 @@ describe('auth controller', () => {
   afterEach(() => jest.resetModules());
 
   test('register returns 200 and token when firebase and prisma succeed', async () => {
-    (global as any).prisma = { user: { create: jest.fn().mockResolvedValue({ id: 1 }) } };
+    (global as any).prisma = { user: { create: jest.fn().mockResolvedValue({ id: 1 }) }, __isMock: true };
 
     jest.mock('firebase-admin', () => {
       const authMock = {

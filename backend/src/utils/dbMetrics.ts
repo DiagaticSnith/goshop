@@ -44,6 +44,11 @@ async function collectOnce(gauges: ReturnType<typeof createGauges> | null) {
 
 export default {
   start: (opts: { intervalMs?: number } = {}) => {
+    // Disable DB metrics in test environment or when explicitly turned off
+    if (process.env.NODE_ENV === 'test' || process.env.DISABLE_DB_METRICS === 'true') {
+      console.info('dbMetrics: disabled in test environment');
+      return;
+    }
     if (!prisma) {
       console.info('dbMetrics: prisma client not available; skipping DB metrics');
       return;

@@ -43,7 +43,7 @@ describe('auth.register error handling', () => {
         credential: { cert: jest.fn(() => ({ })) }
       };
     });
-    (global as any).prisma = { user: { create: jest.fn() } };
+    (global as any).prisma = { user: { create: jest.fn() }, __isMock: true };
     const { register } = await import('../../controllers/auth');
     const req: any = { body: { email: 'a@b.com', password: '123456', fullName: 'A' } };
     const next = jest.fn();

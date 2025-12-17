@@ -182,6 +182,10 @@ try {
     console.warn('dbMetrics: start failed', e && (e as any).message);
 }
 
-app.listen({ address: "0.0.0.0", port: PORT }, () => {
+if (require.main === module) {
+    app.listen({ address: "0.0.0.0", port: PORT }, () => {
         console.log(`Server running on port: ${PORT}`);
-});
+    });
+}
+
+export default app;
