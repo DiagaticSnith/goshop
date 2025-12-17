@@ -25,17 +25,35 @@ if (process.env.JEST_SUITE === 'unit') {
   // In-memory Prisma implementation for integration tests
   const makeInMemoryPrisma = () => {
     const store = new Map();
+    const counters = {};
     const byModel = (m) => { if (!store.has(m)) store.set(m, []); return store.get(m); };
 
-    const matchWhere = (item, where) => {
+      const matchWhere = (item, where) => {
       if (!where) return true;
-      // simple matcher: handle { key: value } and { key: { equals, in, contains } }
+      // handle logical operators: OR / AND
+      if (where.OR && Array.isArray(where.OR)) {
+        return where.OR.some((sub) => matchWhere(item, sub));
+      }
+      if (where.AND && Array.isArray(where.AND)) {
+        return where.AND.every((sub) => matchWhere(item, sub));
+      }
+      // simple matcher: handle { key: value } and { key: { equals, in, contains, gte, lte } }
       return Object.keys(where).every((k) => {
         const v = where[k];
         if (v && typeof v === 'object' && !Array.isArray(v)) {
           if (v.equals !== undefined) return item[k] === v.equals;
           if (v.in && Array.isArray(v.in)) return v.in.includes(item[k]);
-          if (v.contains !== undefined && typeof item[k] === 'string') return item[k].includes(v.contains);
+          if (v.contains !== undefined && typeof item[k] === 'string') {
+            // case-insensitive contains
+            return item[k].toString().toLowerCase().includes(v.contains.toString().toLowerCase());
+          }
+          // Prisma text search compatibility: treat `search` like contains (support trailing *)
+          if (v.search !== undefined && typeof item[k] === 'string') {
+            let q = v.search.toString();
+            // handle trailing wildcard (e.g., 'Bàn*') by removing '*'
+            if (q.endsWith('*')) q = q.slice(0, -1);
+            return item[k].toString().toLowerCase().includes(q.toLowerCase());
+          }
           if (v.gte !== undefined) return (item[k] || 0) >= v.gte;
           if (v.lte !== undefined) return (item[k] || 0) <= v.lte;
           if (v.gt !== undefined) return (item[k] || 0) > v.gt;
@@ -50,8 +68,18 @@ if (process.env.JEST_SUITE === 'unit') {
     const modelApi = (modelName) => ({
       create: async ({ data }) => {
         const coll = byModel(modelName);
-        const id = data.id || `${modelName.slice(0,3)}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+        let id;
+        // generate numeric auto-increment ids for models that use numeric PKs in production
+        if (modelName === 'order' || modelName === 'orderDetails') {
+          counters[modelName] = (counters[modelName] || 0) + 1;
+          id = data.id !== undefined ? data.id : counters[modelName];
+        } else {
+          id = data.id || `${modelName.slice(0,3)}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+        }
         const record = { ...data, id };
+        // Provide sensible defaults matching production schema
+        if (modelName === 'product' && record.status === undefined) record.status = 'ACTIVE';
+        if (modelName === 'user' && record.status === undefined) record.status = 'ACTIVE';
         // handle nested create for orders -> orderDetails
         if (modelName === 'order' && data.orderDetails && data.orderDetails.create) {
           coll.push(record);
@@ -59,7 +87,8 @@ if (process.env.JEST_SUITE === 'unit') {
           const ods = data.orderDetails.create;
           const odColl = byModel('orderDetails');
           for (const od of ods) {
-            const odId = `od-${Date.now()}-${Math.random().toString(36).slice(2,5)}`;
+            counters['orderDetails'] = (counters['orderDetails'] || 0) + 1;
+            const odId = od.id !== undefined ? od.id : counters['orderDetails'];
             const odRec = { ...od, id: odId, orderId };
             odColl.push(odRec);
           }
@@ -114,8 +143,12 @@ if (process.env.JEST_SUITE === 'unit') {
         if (orderBy) {
           const ob = Array.isArray(orderBy) ? orderBy[0] : orderBy;
           const key = Object.keys(ob)[0];
-          const dir = (ob[key] || '').toString().toLowerCase() === 'desc' ? -1 : 1;
-          filtered.sort((a,b) => (a[key] === b[key] ? 0 : (a[key] > b[key] ? -dir : dir)));
+          const dirStr = (ob[key] || '').toString().toLowerCase();
+          filtered.sort((a, b) => {
+            if (a[key] === b[key]) return 0;
+            if (a[key] > b[key]) return dirStr === 'desc' ? -1 : 1;
+            return dirStr === 'desc' ? 1 : -1;
+          });
         }
         if (include && modelName === 'cart') {
           for (const item of filtered) {
@@ -127,6 +160,20 @@ if (process.env.JEST_SUITE === 'unit') {
           }
         }
         return filtered;
+      },
+      aggregate: async ({ _sum, where } = {}) => {
+        const coll = byModel(modelName);
+        const items = where ? coll.filter((i) => matchWhere(i, where)) : coll.slice();
+        const result = {};
+        if (_sum) {
+          result._sum = {};
+          for (const key of Object.keys(_sum)) {
+            if (_sum[key]) {
+              result._sum[key] = items.reduce((acc, it) => acc + (Number(it[key] || 0)), 0);
+            }
+          }
+        }
+        return result;
       },
       update: async ({ where, data }) => {
         const coll = byModel(modelName);
@@ -206,6 +253,20 @@ if (process.env.JEST_SUITE === 'unit') {
     global.prisma = makeInMemoryPrisma();
   }
   global.prisma.__isMock = true;
+
+  // Seed minimal users expected by tests that don't create them explicitly
+  try {
+    const g = global.prisma;
+    // ensure admin-stats user exists for stats tests
+    (async () => {
+      const existing = await g.user.findUnique({ where: { firebaseId: 'admin-stats-uid' } });
+      if (!existing) {
+        await g.user.create({ data: { firebaseId: 'admin-stats-uid', email: 'admin.stats@example.com', fullName: 'Admin Stats', role: 'ADMIN' } });
+      }
+    })();
+  } catch (e) {
+    // ignore
+  }
 }
 
 // Silence stray console warnings in tests that are expected by design.

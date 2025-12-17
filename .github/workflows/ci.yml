@@ -1,6 +1,96 @@
 name: CI
 
 on:
+  push:
+    branches: [ main, test-cd ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  backend-test:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    # allow workflow to continue so we can create an issue when tests fail
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+      - name: Run backend unit tests
+        working-directory: backend
+        run: npm run test:unit --silent
+
+  frontend-build:
+    name: Build Frontend (user)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build --silent
+
+  frontend-admin-build:
+    name: Build Frontend Admin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install frontend-admin deps
+        working-directory: frontend-admin
+        run: npm ci
+      - name: Build frontend-admin
+        working-directory: frontend-admin
+        run: npm run build --silent
+
+  create-issue-on-failure:
+    name: Create Issue If Backend Tests Failed
+    runs-on: ubuntu-latest
+    needs: backend-test
+    if: needs.backend-test.result == 'failure'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub issue for failing backend tests
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = `CI: Backend unit tests failed on ${{ github.ref }}`;
+            const body = `The backend unit tests failed in workflow run ${{ github.run_id }}.
+\n
+Repository: ${{ github.repository }}\n
+Commit: ${{ github.sha }}\n
+Triggered by: ${{ github.event_name }}\n
+\n
+Please check the Actions logs for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const existing = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
+            const dup = existing.data.find(i => i.title === title);
+            if (dup) {
+              console.log('Issue already exists:', dup.number);
+            } else {
+              await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body });
+            }
+name: CI
+
+on:
   pull_request:
     branches: [ main ]
 
