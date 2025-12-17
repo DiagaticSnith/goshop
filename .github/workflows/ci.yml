@@ -71,14 +71,16 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const title = `CI: Backend unit tests failed on ${process.env.GITHUB_REF || ''}`;
-            const body = `The backend unit tests failed in workflow run ${process.env.GITHUB_RUN_ID || ''}.
-\n
-Repository: ${process.env.GITHUB_REPOSITORY || ''}\n
-Commit: ${process.env.GITHUB_SHA || ''}\n
-Triggered by: ${process.env.GITHUB_EVENT_NAME || ''}\n
-\n
-Please check the Actions logs for details: ${process.env.GITHUB_SERVER_URL || ''}/${process.env.GITHUB_REPOSITORY || ''}/actions/runs/${process.env.GITHUB_RUN_ID || ''}`;
+            const title = 'CI: Backend unit tests failed on ' + (process.env.GITHUB_REF || '');
+            const body = [
+              'The backend unit tests failed in workflow run ' + (process.env.GITHUB_RUN_ID || ''),
+              '',
+              'Repository: ' + (process.env.GITHUB_REPOSITORY || ''),
+              'Commit: ' + (process.env.GITHUB_SHA || ''),
+              'Triggered by: ' + (process.env.GITHUB_EVENT_NAME || ''),
+              '',
+              'Please check the Actions logs for details: ' + (process.env.GITHUB_SERVER_URL || '') + '/' + (process.env.GITHUB_REPOSITORY || '') + '/actions/runs/' + (process.env.GITHUB_RUN_ID || '')
+            ].join('\n');
             const existing = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
             const dup = existing.data.find(i => i.title === title);
             if (dup) {
