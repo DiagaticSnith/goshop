@@ -26,9 +26,7 @@
     "ts-jest": "^29.1.0",
     "@types/jest": "^29.5.3",
     "supertest": "^6.3.3",
-    "@types/supertest": "^2.0.11"
-  },
-  "devDependencies": {
+    "@types/supertest": "^2.0.11",
     "selenium-webdriver": "^4.12.0",
     "mocha": "^10.2.0"
   },

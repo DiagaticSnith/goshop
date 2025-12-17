@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   backend-test:
-    name: Backend Unit Tests
+    name: Backend Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
         run: npm ci
       - name: Run backend unit tests
         working-directory: backend
-        run: npm run test:unit --silent
+        run: npm run test --silent
 
   frontend-build:
     name: Build Frontend (user)
@@ -56,7 +56,6 @@ jobs:
       - name: Build frontend-admin
         working-directory: frontend-admin
         run: npm run build --silent
-
   selenium-tests:
     name: Selenium UI tests (Selenium Standalone Firefox)
     runs-on: ubuntu-latest
