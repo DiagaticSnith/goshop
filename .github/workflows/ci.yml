@@ -63,7 +63,7 @@ jobs:
     name: Create Issue If Backend Tests Failed
     runs-on: ubuntu-latest
     needs: backend-test
-    if: needs.backend-test.result == 'failure'
+    if: ${{ always() && needs.backend-test.result == 'failure' }}
     steps:
       - uses: actions/checkout@v4
       - name: Create GitHub issue for failing backend tests
