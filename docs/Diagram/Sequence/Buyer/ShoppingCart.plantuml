@@ -1,0 +1,62 @@
+@startuml ShoppingCart
+title Sequence Diagram - Buyer Shopping Cart
+
+actor "Người mua" as Buyer
+participant "Giao diện giỏ hàng" as UI
+participant "Hệ thống" as System
+participant "CSDL" as Database
+
+skinparam sequence {
+  LifelineBackgroundColor #FFFFFF
+  LifelineBorderColor #1976D2
+  LifelineStyle solid
+  ArrowColor #1976D2
+  ActorBorderColor #1565C0
+  ParticipantBorderColor #1565C0
+  ParticipantBackgroundColor #E3F2FD
+  FontSize 15
+}
+
+
+Buyer -> UI: Đăng nhập
+UI -> System: Gửi thông tin đăng nhập
+System -> Database: Kiểm tra thông tin người dùng
+Database --> System: Kết quả xác thực
+System --> UI: Thông báo đăng nhập thành công
+
+
+Buyer -> UI: Chọn sản phẩm để thêm vào giỏ
+UI -> System: Gửi yêu cầu thêm sản phẩm
+System -> Database: Cập nhật giỏ hàng (thêm sản phẩm)
+Database --> System: Xác nhận cập nhật
+System --> UI: Hiển thị giỏ hàng đã cập nhật
+
+
+alt Người mua thay đổi số lượng
+    Buyer -> UI: Cập nhật số lượng sản phẩm
+    UI -> System: Gửi yêu cầu cập nhật số lượng
+    System -> Database: Cập nhật thông tin giỏ hàng
+    Database --> System: Xác nhận cập nhật
+    System --> UI: Hiển thị số lượng đã cập nhật
+else Tiếp tục mua sắm
+    Buyer -> UI: Quay lại danh mục sản phẩm
+end
+
+
+System -> Database: Lấy danh sách sản phẩm trong giỏ
+Database --> System: Dữ liệu sản phẩm (giá, số lượng, khuyến mãi, phí vận chuyển)
+System --> UI: Hiển thị tổng tiền, khuyến mãi, phí vận chuyển
+
+alt Xóa sản phẩm khỏi giỏ
+    Buyer -> UI: Chọn sản phẩm để xóa
+    UI -> System: Gửi yêu cầu xóa
+    System -> Database: Xóa sản phẩm khỏi giỏ
+    Database --> System: Xác nhận xóa
+    System --> UI: Hiển thị giỏ hàng sau khi xóa
+else Thanh toán
+    Buyer -> UI: Chọn "Thanh toán"
+    UI -> System: Gửi yêu cầu chuyển sang quy trình thanh toán
+    System --> UI: Điều hướng đến quy trình thanh toán
+end
+
+@enduml

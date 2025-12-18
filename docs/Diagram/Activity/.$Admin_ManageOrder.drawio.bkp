@@ -1,0 +1,26 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/25.0.2 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="25.0.2">
+  <diagram name="Page-1" id="FTG_YRxhRzjQO48bAbLz">
+    <mxGraphModel dx="1036" dy="510" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Ag3NTfjNGn9w8KzZYo_T-1" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="430" y="40" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Ag3NTfjNGn9w8KzZYo_T-2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#ff0000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="Ag3NTfjNGn9w8KzZYo_T-1" parent="1" target="Ag3NTfjNGn9w8KzZYo_T-3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="445" y="130" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Ag3NTfjNGn9w8KzZYo_T-3" value="Người quản trị xem tất cả đơn hàng" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="372.5" y="120" width="145" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Ag3NTfjNGn9w8KzZYo_T-4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#ff0000;rounded=0;" edge="1" source="Ag3NTfjNGn9w8KzZYo_T-3" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="445" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

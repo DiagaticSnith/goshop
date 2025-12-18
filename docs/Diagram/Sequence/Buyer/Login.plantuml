@@ -1,0 +1,60 @@
+@startuml Sequence Login
+actor "Người dùng" as User
+participant "Giao diện đăng nhập" as UI
+participant "Hệ thống" as System
+participant "CSDL người dùng" as Database
+participant "Dịch vụ Google Auth" as GoogleAuth
+
+User -> UI: Nhập Email và Mật khẩu hoặc chọn "Đăng nhập bằng Google"
+
+alt Đăng nhập bằng Email
+    UI -> System: Gửi thông tin Email và Mật khẩu
+    System -> Database: Kiểm tra Email hợp lệ
+    Database --> System: Kết quả kiểm tra
+
+    alt Email không hợp lệ
+        System --> UI: Yêu cầu người dùng nhập lại Email
+    else Email hợp lệ
+        System -> Database: Kiểm tra mật khẩu hợp lệ
+        Database --> System: Kết quả kiểm tra mật khẩu
+
+        alt Mật khẩu không hợp lệ
+            System --> UI: Yêu cầu nhập lại mật khẩu
+        else Mật khẩu hợp lệ
+            System -> Database: Xác thực tài khoản
+            Database --> System: Kết quả xác thực
+
+            alt Xác thực thất bại
+                System --> UI: Thông báo lỗi xác thực
+            else Xác thực thành công
+                System -> Database: Kiểm tra vai trò người dùng
+                Database --> System: Vai trò người dùng
+
+                alt Người quản trị
+                    System --> UI: Hiển thị trang Dashboard
+                else Người mua
+                    System --> UI: Hiển thị trang Danh mục sản phẩm
+                end
+            end
+        end
+    end
+else Đăng nhập bằng Google
+    UI -> GoogleAuth: Gửi yêu cầu xác thực Google
+    GoogleAuth --> System: Thông tin tài khoản Google
+    System -> Database: Kiểm tra tài khoản trong hệ thống
+    Database --> System: Kết quả xác thực
+
+    alt Xác thực thất bại
+        System --> UI: Thông báo lỗi xác thực Google
+    else Xác thực thành công
+        System -> Database: Kiểm tra vai trò người dùng
+        Database --> System: Vai trò người dùng
+        alt Người quản trị
+            System --> UI: Hiển thị trang Dashboard
+        else Người mua
+            System --> UI: Hiển thị trang Danh mục sản phẩm
+        end
+    end
+end
+
+@enduml

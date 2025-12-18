@@ -1,0 +1,24 @@
+@startuml Sequence Favorite Product
+
+actor "Người mua" as Buyer
+participant "Giao diện Website" as UI
+participant "Hệ thống" as System
+database "CDSL" as FavList
+
+Buyer -> UI: Nhấn nút "Yêu thích"
+UI -> System: Gửi yêu cầu thêm sản phẩm vào yêu thích
+System -> FavList: Kiểm tra trạng thái sản phẩm yêu thích
+FavList --> System: Trả kết quả
+
+alt Sản phẩm chưa có trạng thái yêu thích
+    System -> FavList: Thêm sản phẩm vào danh sách yêu thích
+    FavList --> System: Xác nhận đã thêm
+    System --> UI: Hiển thị thông báo "Đã thêm vào yêu thích"
+else Sản phẩm đã có trạng thái yêu thích
+    System -> FavList: Xóa sản phẩm khỏi danh sách yêu thích
+    FavList --> System: Xác nhận đã xóa
+    System --> UI: Hiển thị thông báo "Đã xóa khỏi yêu thích"
+end
+
+System --> UI: Cập nhật giao diện (trạng thái yêu thích)
+@enduml

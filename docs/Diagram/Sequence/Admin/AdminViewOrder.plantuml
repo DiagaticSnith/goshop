@@ -1,0 +1,26 @@
+@startuml Sequence Admin View Order
+
+actor "Người quản trị" as Admin
+participant "Giao diện hệ thống" as UI
+participant "Hệ thống quản lý đơn hàng" as System
+database "Cơ sở dữ liệu" as DB
+
+Admin -> UI: Nhập email và mật khẩu
+UI -> System: Gửi thông tin đăng nhập
+System -> DB: Kiểm tra tài khoản quản trị
+DB --> System: Trả kết quả xác thực
+
+alt Đăng nhập thất bại
+    System --> UI: Thông báo lỗi đăng nhập
+else Đăng nhập thành công
+    System --> UI: Chuyển đến trang quản trị
+end
+
+
+Admin -> UI: Chọn chức năng "Xem tất cả đơn hàng"
+UI -> System: Gửi yêu cầu lấy danh sách đơn hàng
+System -> DB: Truy vấn tất cả đơn hàng
+DB --> System: Trả về danh sách đơn hàng
+System --> UI: Gửi dữ liệu danh sách đơn hàng và hiển thị
+
+@enduml

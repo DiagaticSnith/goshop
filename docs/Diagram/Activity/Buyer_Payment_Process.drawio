@@ -1,0 +1,125 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/25.0.2 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="25.0.2">
+  <diagram name="Page-1" id="uaKEJTAiqOYpOF3-sfIr">
+    <mxGraphModel dx="3307" dy="2358" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="MqDRuxEPInC7XebcSkwN-1" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="420" y="-90" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-1" target="MqDRuxEPInC7XebcSkwN-10" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="435" y="-10" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-3" value="Người mua xác nhận đặt hàng" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="357.5" y="80" width="155" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-3" target="MqDRuxEPInC7XebcSkwN-5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="435" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-5" value="Hệ thống kiếm tra thông tin giỏ hàng (số lượng sản phẩm, sản phẩm đó còn được kinh doan không, người mua đã điền địa chỉ giao hàng, phương thức thanh toán, ...)&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="308.52" y="170" width="252.97" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-5" target="MqDRuxEPInC7XebcSkwN-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="435" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-7" value="Thông tin hợp lệ ?" style="rhombus;whiteSpace=wrap;html=1;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="370" y="320" width="130" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-8" value="no" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-7" target="MqDRuxEPInC7XebcSkwN-12" edge="1">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="620" y="345" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-9" value="yes" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=top;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-7" target="MqDRuxEPInC7XebcSkwN-17" edge="1">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="435" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-10" value="Đăng Nhập" style="ellipse;whiteSpace=wrap;html=1;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="367.5" y="-10" width="135" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-11" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-10" target="MqDRuxEPInC7XebcSkwN-3" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="445" y="-50" as="targetPoint" />
+            <mxPoint x="445" y="-100" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-12" value="Thông báo lỗi và yêu cầu người mua cập nhật thông tin" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="600" y="322.5" width="130" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-13" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-12" target="MqDRuxEPInC7XebcSkwN-5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="660" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-16" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="420" y="1020" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-17" value="Phương thức thanh toán hợp lệ ?" style="rhombus;whiteSpace=wrap;html=1;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="325" y="460" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-18" value="no" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-17" target="MqDRuxEPInC7XebcSkwN-20" edge="1">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="660" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-19" value="yes" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=top;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-17" target="MqDRuxEPInC7XebcSkwN-24" edge="1">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="435" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-20" value="Thông báo lỗi phương thức thanh toán" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="640" y="475" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-21" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-20" target="MqDRuxEPInC7XebcSkwN-5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="790" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-24" value="Hệ thống xử lý thanh toán thông qua Stripe" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="362.5" y="630" width="145" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-25" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-24" target="MqDRuxEPInC7XebcSkwN-26" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="435" y="730" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-26" value="Thanh toán thành công ?" style="rhombus;whiteSpace=wrap;html=1;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="350" y="730" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-27" value="no" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-26" target="MqDRuxEPInC7XebcSkwN-31" edge="1">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="580" y="770" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-28" value="yes" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=top;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-26" target="MqDRuxEPInC7XebcSkwN-29" edge="1">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="435" y="880" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-29" value="Hệ thống cập nhật trạng thái thanh toán và gửi thông báo xác nhạn qua email" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="328.75" y="870" width="212.5" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-30" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-29" target="MqDRuxEPInC7XebcSkwN-16" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="435" y="970" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-31" value="Thông báo lỗi thanh toán, yêu cầu người dùng thanh toán lại" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="580" y="750" width="180" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="MqDRuxEPInC7XebcSkwN-32" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#000000;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="MqDRuxEPInC7XebcSkwN-31" target="MqDRuxEPInC7XebcSkwN-16" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="660" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,73 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/25.0.2 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="25.0.2">
+  <diagram name="Page-1" id="1m6dTvdM69Io6XgwARwB">
+    <mxGraphModel dx="1860" dy="888" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-1" value="Quy trình thanh toán" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=30;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="130" y="180" width="920" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-2" value="Người mua" style="swimlane;html=1;startSize=20;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-1">
+          <mxGeometry y="30" width="920" height="970" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-3" value="Chọn thanh toán&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-2">
+          <mxGeometry x="381.5" y="50" width="157" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-4" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="SBlUlfHO1NNODKGZ5rli-2" source="SBlUlfHO1NNODKGZ5rli-3" target="SBlUlfHO1NNODKGZ5rli-22">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="604.9100000000001" y="140" as="sourcePoint" />
+            <mxPoint x="460.82" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-5" value="Nhập thông tin thẻ hoặc thông tin tài khoản ngân hàng" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-2">
+          <mxGeometry x="384.68" y="290" width="158.81" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-6" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="SBlUlfHO1NNODKGZ5rli-2" source="SBlUlfHO1NNODKGZ5rli-5" target="SBlUlfHO1NNODKGZ5rli-17">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="557.84" y="495" as="sourcePoint" />
+            <mxPoint x="464.08999999999986" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-14" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="SBlUlfHO1NNODKGZ5rli-2" source="SBlUlfHO1NNODKGZ5rli-17" target="SBlUlfHO1NNODKGZ5rli-19">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="464.08999999999986" y="480" as="sourcePoint" />
+            <mxPoint x="305" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-17" value="&lt;p class=&quot;MsoNormal&quot;&gt;&lt;font face=&quot;Helvetica&quot;&gt;&amp;nbsp;Stripe thực hiện bước Xử lý Giao dịch, bao gồm việc mã hóa dữ liệu, gửi yêu cầu ủy quyền đến ngân hàng phát hành thẻ, và chờ phản hồi về tính hợp lệ của giao dịch.&lt;/font&gt;&lt;/p&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-2">
+          <mxGeometry x="357.5" y="400" width="215" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-19" value="&lt;p class=&quot;MsoNormal&quot;&gt;&lt;font face=&quot;Helvetica&quot;&gt;Nếu Giao dịch không thành công: Stripe gửi mã lỗi về hệ thống. Khách hàng nhận được thông báo rõ ràng về việc giao dịch thất bại&lt;/font&gt;&lt;/p&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-2">
+          <mxGeometry x="100" y="600" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-20" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="SBlUlfHO1NNODKGZ5rli-2" source="SBlUlfHO1NNODKGZ5rli-17" target="SBlUlfHO1NNODKGZ5rli-21">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="640" y="770" as="sourcePoint" />
+            <mxPoint x="780" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-21" value="&lt;p class=&quot;MsoNormal&quot;&gt;&lt;font face=&quot;Helvetica&quot;&gt;Nếu Giao dịch thành công: Stripe gửi lại một phản hồi thành công (Webhook/API response) cho hệ thống bán hàng. Hệ thống ngay lập tức Cập nhật trạng thái Đơn hàng thành &quot;Đã Thanh Toán&quot;,&lt;/font&gt;&lt;/p&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-2">
+          <mxGeometry x="600" y="570" width="240" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-22" value="Đơn Hàng&amp;nbsp;&lt;div&gt;Trạng thái: Khởi tạo&lt;/div&gt;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-2">
+          <mxGeometry x="400" y="150" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-23" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.524;exitY=0.866;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="SBlUlfHO1NNODKGZ5rli-2" source="SBlUlfHO1NNODKGZ5rli-22" target="SBlUlfHO1NNODKGZ5rli-5">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="690" y="210" as="sourcePoint" />
+            <mxPoint x="740" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-24" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="SBlUlfHO1NNODKGZ5rli-2" source="SBlUlfHO1NNODKGZ5rli-21" target="SBlUlfHO1NNODKGZ5rli-25">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="680" y="780" as="sourcePoint" />
+            <mxPoint x="720" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SBlUlfHO1NNODKGZ5rli-25" value="Đơn hàng&lt;div&gt;Trạng thái: Thanh toán thành công&lt;/div&gt;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="SBlUlfHO1NNODKGZ5rli-2">
+          <mxGeometry x="660" y="760" width="120" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
