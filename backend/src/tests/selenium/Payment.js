@@ -49,7 +49,20 @@ describe('Quy trình thanh toán', function() {
       await dropdown.findElement(By.xpath("//option[. = 'Price: High to low']")).click()
     }
     await driver.findElement(By.css("#sorting > option:nth-child(2)")).click()
-    await driver.findElement(By.css(".animate-fadeIn:nth-child(1) .w-full")).click()
+    try {
+      // prefer a more flexible selector and wait for at least one product card to appear
+      const cards = await driver.wait(until.elementsLocated(By.css('.animate-fadeIn .w-full')), 10000)
+      if (cards && cards.length > 0) {
+        await driver.wait(until.elementIsVisible(cards[0]), 5000)
+        await cards[0].click()
+      } else {
+        throw new Error('No product cards found')
+      }
+    } catch (e) {
+      console.error('Could not find product card (.animate-fadeIn .w-full). Page source:')
+      console.error(await driver.getPageSource())
+      throw e
+    }
     try {
       const w8 = await driver.wait(until.elementLocated(By.css(".w-8")), 10000)
       await driver.wait(until.elementIsVisible(w8), 5000)
