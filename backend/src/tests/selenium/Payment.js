@@ -97,20 +97,53 @@ describe('Quy trình thanh toán', function() {
     await driver.findElement(By.css(".p-3")).sendKeys("Address")
     await driver.findElement(By.css(".mt-4")).click()
     try {
-      const cardNumber = await driver.wait(until.elementLocated(By.id("cardNumber")), 15000)
-      await driver.wait(until.elementIsVisible(cardNumber), 5000)
-      await cardNumber.click()
-      await cardNumber.sendKeys("4111 1111 1111 1111")
+      // Try direct inputs first (if the app exposes plain inputs)
+      try {
+        const cardNumber = await driver.wait(until.elementLocated(By.id("cardNumber")), 5000)
+        await driver.wait(until.elementIsVisible(cardNumber), 2000)
+        await cardNumber.click()
+        await cardNumber.sendKeys("4111 1111 1111 1111")
 
-      const cardExpiry = await driver.wait(until.elementLocated(By.id("cardExpiry")), 10000)
-      await driver.wait(until.elementIsVisible(cardExpiry), 5000)
-      await cardExpiry.click()
-      await cardExpiry.sendKeys("08 / 28")
+        const cardExpiry = await driver.wait(until.elementLocated(By.id("cardExpiry")), 2000)
+        await driver.wait(until.elementIsVisible(cardExpiry), 2000)
+        await cardExpiry.click()
+        await cardExpiry.sendKeys("08 / 28")
 
-      const cardCvc = await driver.wait(until.elementLocated(By.id("cardCvc")), 10000)
-      await driver.wait(until.elementIsVisible(cardCvc), 5000)
-      await cardCvc.click()
-      await cardCvc.sendKeys("811")
+        const cardCvc = await driver.wait(until.elementLocated(By.id("cardCvc")), 2000)
+        await driver.wait(until.elementIsVisible(cardCvc), 2000)
+        await cardCvc.click()
+        await cardCvc.sendKeys("811")
+      } catch (plainInputsErr) {
+        // Fallback: many sites use Stripe Elements which render inputs inside three iframes.
+        const frames = await driver.findElements(By.css('iframe'))
+        if (frames.length >= 3) {
+          // card number
+          await driver.switchTo().frame(frames[0])
+          const fn = await driver.findElement(By.css('input'))
+          await fn.click()
+          await fn.sendKeys('4111 1111 1111 1111')
+          await driver.switchTo().defaultContent()
+
+          // expiry
+          await driver.switchTo().frame(frames[1])
+          const fe = await driver.findElement(By.css('input'))
+          await fe.click()
+          await fe.sendKeys('08 / 28')
+          await driver.switchTo().defaultContent()
+
+          // cvc
+          await driver.switchTo().frame(frames[2])
+          const fc = await driver.findElement(By.css('input'))
+          await fc.click()
+          await fc.sendKeys('811')
+          await driver.switchTo().defaultContent()
+        } else {
+          // no obvious inputs - surface helpful debug
+          console.error('Could not find card inputs (no #cardNumber and fewer than 3 iframes). Page source:')
+          console.error(await driver.getPageSource())
+          throw plainInputsErr
+        }
+      }
 
       const billingName = await driver.wait(until.elementLocated(By.id("billingName")), 10000)
       await driver.wait(until.elementIsVisible(billingName), 5000)
