@@ -1,0 +1,62 @@
+@startuml Product_Catalog
+title Sequence Diagram - Buyer Product Catalog
+
+actor "Người mua" as Buyer
+participant "Giao diện danh mục" as UI
+participant "Hệ thống" as System
+participant "CSDL sản phẩm" as Database
+
+skinparam sequence {
+  LifelineBackgroundColor #FFFFFF
+  LifelineBorderColor #1976D2
+  LifelineStyle solid
+  ArrowColor #1976D2
+  ActorBorderColor #1565C0
+  ParticipantBorderColor #1565C0
+  ParticipantBackgroundColor #E3F2FD
+  FontSize 15
+}
+
+Buyer -> UI: Mở trang danh mục sản phẩm
+UI -> System: Yêu cầu danh sách sản phẩm
+System -> Database: Truy vấn danh sách sản phẩm
+Database --> System: Trả về danh sách sản phẩm
+System --> UI: Hiển thị danh sách sản phẩm
+
+Buyer -> UI: Thực hiện hành động
+
+alt Tìm kiếm sản phẩm
+    Buyer -> UI: Nhập tên sản phẩm cần tìm
+    UI -> System: Gửi yêu cầu tìm kiếm
+    System -> Database: Kiểm tra sản phẩm có tồn tại?
+    Database --> System: Trả kết quả (có hoặc không)
+
+    alt Có sản phẩm
+        System --> UI: Hiển thị kết quả tìm kiếm
+    else Không có sản phẩm
+        System --> UI: Hiển thị thông điệp không tìm thấy
+    end
+
+else if Sắp xếp sản phẩm
+    Buyer -> UI: Chọn tiêu chí sắp xếp
+    UI -> System: Gửi yêu cầu sắp xếp
+    System -> Database: Truy vấn sản phẩm đã sắp xếp
+    Database --> System: Danh sách sau sắp xếp
+    System --> UI: Hiển thị sản phẩm đã sắp xếp
+
+else if Xem chi tiết sản phẩm
+    Buyer -> UI: Chọn xem chi tiết sản phẩm
+    UI -> System: Gửi yêu cầu chi tiết sản phẩm
+    System -> Database: Truy vấn thông tin chi tiết
+    Database --> System: Dữ liệu chi tiết
+    System --> UI: Hiển thị chi tiết sản phẩm
+
+else if Lọc sản phẩm theo danh mục
+    Buyer -> UI: Chọn danh mục cần lọc
+    UI -> System: Gửi yêu cầu lọc sản phẩm
+    System -> Database: Truy vấn sản phẩm theo danh mục
+    Database --> System: Danh sách sau khi lọc
+    System --> UI: Hiển thị sản phẩm đã lọc
+end
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml Sequence Buyer Manage Personal Info
+
+actor "Người mua" as Buyer
+participant "Giao diện người dùng" as UI
+participant "Hệ thống" as System
+database "CSDL Người dùng" as UserDB
+
+
+Buyer -> UI: Chọn chức năng xem thông tin cá nhân
+UI -> System: Gửi yêu cầu lấy thông tin cá nhân
+System -> UserDB: Truy vấn thông tin cá nhân
+UserDB --> System: Trả về dữ liệu thông tin cá nhân
+System --> UI: Gửi dữ liệu hiển thị
+
+Buyer -> UI: Nhập hoặc cập nhật thông tin cá nhân
+UI -> System: Gửi yêu cầu cập nhật thông tin
+System -> System: Kiểm tra tính hợp lệ thông tin
+
+alt Thông tin không hợp lệ
+    System --> UI: Thông báo lỗi "Thông tin không hợp lệ"
+else Thông tin hợp lệ
+    System -> UserDB: Lưu hoặc cập nhật thông tin cá nhân
+    UserDB --> System: Xác nhận đã lưu thành công
+    System --> UI: Gửi thông báo cập nhật thành công
+end
+
+Buyer -> UI: Chọn xóa thông tin cá nhân
+UI -> System: Gửi yêu cầu xóa thông tin
+System -> UserDB: Xóa thông tin cá nhân
+UserDB --> System: Xác nhận xóa thành công
+System --> UI: Gửi thông báo xóa thành công
+
+@enduml

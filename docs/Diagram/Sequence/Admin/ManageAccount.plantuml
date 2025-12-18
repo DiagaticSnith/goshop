@@ -1,0 +1,53 @@
+@startuml Sequence Admin Manage Account
+
+actor "Người dùng" as User
+participant "Hệ thống" as System
+participant "Dịch vụ Email" as EmailService
+participant "Admin" as Admin
+database "Cơ sở dữ liệu" as DB
+
+User -> System: Đăng nhập
+activate System
+
+System -> User: Người dùng trả lời câu hỏi bảo mật
+activate User
+User --> System: Câu trả lời
+deactivate User
+
+alt Câu trả lời đúng
+    System -> System: Xác thực thành công
+    
+    System -> User: Người quản trị được liên hệ?
+    User --> System: Phản hồi
+    
+    alt Có liên hệ được
+        par Xử lý song song
+            System -> System: Thẩm tài khoản
+            System -> EmailService: Gửi mail tới khoản
+            activate EmailService
+            EmailService --> System: Email đã gửi
+            deactivate EmailService
+        end
+        
+        System -> System: Thực hiện thêm hoặc cập nhật tài khoản
+        System -> DB: Lưu vào cơ sở dữ liệu
+        activate DB
+        DB --> System: Lưu thành công
+        deactivate DB
+        
+    else Không liên hệ được
+        System -> System: Xóa tài khoản
+        System -> DB: Cập nhật trạng thái tài khoản
+        activate DB
+        DB --> System: Đã xóa
+        deactivate DB
+    end
+    
+else Câu trả lời sai
+    System -> System: Thông báo không đủ thông tin để khôi phục
+    System -> User: Từ chối xác thực
+end
+
+System --> User: Kết thúc quy trình
+
+@enduml

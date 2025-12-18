@@ -1,0 +1,15 @@
+@startuml Sequence View Order
+
+actor "Người mua" as Buyer
+participant "Giao diện Website" as UI
+participant "Hệ thống" as System
+database "CSDL Đơn hàng" as OrderDB
+
+Buyer -> UI: Chọn đơn hàng muốn xem chi tiết
+UI -> System: Gửi yêu cầu xem chi tiết đơn hàng
+System -> OrderDB: Lấy thông tin chi tiết đơn hàng
+OrderDB --> System: Trả về dữ liệu đơn hàng
+System --> UI: Gửi thông tin chi tiết đơn hàng
+UI --> Buyer: Hiển thị chi tiết đơn hàng
+
+@enduml
