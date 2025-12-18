@@ -1,0 +1,78 @@
+@startuml ConceptualModel
+title Conceptual Model
+
+skinparam backgroundColor #FAFAFA
+skinparam class {
+  BackgroundColor #E3F2FD
+  ArrowColor #1976D2
+  BorderColor #1565C0
+  FontSize 14
+}
+
+' Sắp xếp các package theo nhóm chức năng
+package "Admin" {
+  class SysAdmin
+}
+
+package "Product Catalog" {
+  class InventoryInfo
+  class Product 
+  class Buyer
+  class FavoriteProduct
+}
+
+package "Shopping Cart" {
+  class Cart
+}
+
+package "Manage Inventory" {
+  class Inventory
+}
+
+package "Access Control" {
+  class User
+  class UserInfomation
+  class Role
+}
+
+package Account {
+  class AccountInfo
+}
+
+package "Payment Process" {
+  class PaymentMethod
+  class Payment
+  class PaymentStatus
+  class CartInfo
+}
+
+package "Manage Order" {
+  class Order
+}
+
+' Các mối quan hệ giữ nguyên hoặc chỉnh lại cho dễ nhìn
+InventoryInfo -- Product : is a
+Buyer -- Product : filter
+SysAdmin -- Product: manage
+Buyer -- FavoriteProduct : favorite
+FavoriteProduct -- Product : is a
+Inventory -- InventoryInfo : is a
+Product -- Cart : 1..*
+Cart -- Product : 0..*
+Buyer -- Cart : actions
+SysAdmin -- Cart : see all carts
+SysAdmin -- Inventory : CRUD
+User -- UserInfomation : 1..1
+User --> Role : 1..1
+AccountInfo -- User : 1..1
+PaymentMethod -- Payment : 1..1
+Payment -- PaymentStatus : 1..1
+Payment -- CartInfo : 1..1
+Buyer -- Payment : 0..*
+CartInfo -- Cart: is a
+Buyer -- Order : 0..*
+SysAdmin -- Order: see all orders
+Buyer -- User: is a
+SysAdmin -- User: is a
+
+@enduml

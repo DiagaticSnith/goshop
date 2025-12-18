@@ -1,0 +1,178 @@
+openapi: 3.0.0
+servers: []
+info:
+  version: "1.0.0"
+  title: GoShop
+  description: The API for the GoShop
+paths:
+  /auth/register:
+    post:
+      tags:
+        - AuthService
+      description: returns all registered devices
+      operationId: getDevices
+      parameters:
+        - in: query
+          name: skip
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: limit
+          description: max number of records to return
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: All the devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uri
+                  example: 'http://10.0.0.225:8080'
+  /auth/register/google:
+    post:
+      tags:
+        - AuthService
+      operationId: register
+      responses:
+        '200':
+          description: successfully registered device
+  /auth/session-login:
+    post:
+      tags:
+        - AuthService
+      operationId: login
+      responses:
+        '200':
+          description: successfully registered device
+  '/users/update/id:':
+    patch:
+      tags:
+        - UserService
+      operationId: update
+      responses:
+        '200':
+          description: response
+  '/users/id:':
+    get:
+      tags:
+        - UserService
+      operationId: user
+      responses:
+        '200':
+          description: response
+  /products:
+    get:
+      tags:
+        - ProductService
+      operationId: temperatureSummary
+      responses:
+        '200':
+          description: ok
+    post:
+      tags:
+        - ProductService
+      operationId: e1
+      responses:
+        '200':
+          description: the forecast
+  /products/search:
+    post:
+      tags:
+        - ProductService
+      operationId: getForecast
+      responses:
+        '200':
+          description: the forecast
+  '/products/category/:id':
+    get:
+      tags:
+        - ProductService
+      operationId: asd
+      responses:
+        '200':
+          description: the forecast
+  '/products/:id':
+    post:
+      tags:
+        - ProductService
+      operationId: fqwf
+      responses:
+        '200':
+          description: the forecast
+    patch:
+      tags:
+        - ProductService
+      operationId: fqwf
+      responses:
+        '200':
+          description: the forecast
+    delete:
+      tags:
+        - ProductService
+      operationId: qqrw
+      responses:
+        '200':
+          description: the forecast
+  /category:
+    get:
+      tags:
+        - CategoryService
+      operationId: getZones
+      responses:
+        '200':
+          description: ok
+  '/category/:id':
+    get:
+      tags:
+        - CategoryService
+      operationId: quietZone
+      responses:
+        '200':
+          description: ok
+  /orders:
+    get:
+      tags:
+        - OrderService
+      operationId: qwr
+      responses:
+        '200':
+          description: ok
+  '/orders/user/:id':
+    post:
+      tags:
+        - OrderService
+      operationId: qdq
+      responses:
+        '200':
+          description: ok
+  '/checkout/session/:id':
+    get:
+      tags:
+        - CheckoutService
+      operationId: qew
+      responses:
+        '200':
+          description: ok
+  '/checkout/create-session':
+    get:
+      tags:
+        - CheckoutService
+      operationId: qewas
+      responses:
+        '200':
+          description: ok
+  '/api/webhook':
+    get:
+      tags:
+        - WebhookService
+      operationId: sqewas
+      responses:
+        '200':
+          description: ok
