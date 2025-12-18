@@ -1,0 +1,37 @@
+@startuml Sequence Sign In
+actor "Người dùng" as User
+participant "Giao diện đăng ký" as UI
+participant "Hệ thống" as System
+participant "CSDL người dùng" as Database
+participant "Dịch vụ Google Auth" as GoogleAuth
+
+User -> UI: Nhập Email và Password hoặc chọn "Đăng ký bằng Google"
+
+alt Đăng ký bằng Email/Password
+    UI -> System: Gửi thông tin Email và Password
+    System -> Database: Kiểm tra Email hợp lệ
+    Database --> System: Kết quả kiểm tra Email
+
+    alt Email không hợp lệ
+        System --> UI: Yêu cầu nhập lại Email hoặc Password
+    else Email hợp lệ
+        System -> Database: Kiểm tra độ hợp lệ Password
+        Database --> System: Kết quả kiểm tra Password
+
+        alt Password không hợp lệ
+            System --> UI: Yêu cầu nhập lại Password
+        else Password hợp lệ
+            System -> Database: Lưu tài khoản người dùng
+            Database --> System: Xác nhận lưu thành công
+            System --> UI: Thông báo đăng ký thành công
+        end
+    end
+else Đăng ký bằng Google
+    UI -> GoogleAuth: Gửi yêu cầu xác thực Google
+    GoogleAuth --> System: Trả về thông tin tài khoản Google
+    System -> Database: Lưu tài khoản người dùng (nếu chưa tồn tại)
+    Database --> System: Xác nhận lưu thành công
+    System --> UI: Thông báo đăng ký thành công qua Google
+end
+
+@enduml

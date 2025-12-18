@@ -1,0 +1,50 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/25.0.2 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="25.0.2">
+  <diagram name="Page-1" id="A4dPRT5-bZh38JgwGadV">
+    <mxGraphModel dx="1036" dy="510" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-1" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="425" y="10" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#FFFFFF;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="ZLzUab_sh_KCVRgH_CJE-1" parent="1" target="ZLzUab_sh_KCVRgH_CJE-3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-3" value="Người dùng thêm sản phẩm vào danh sách yêu thích bằng cách nhấn nút &quot;Yêu thích&quot;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="340" y="100" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#FFFFFF;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="ZLzUab_sh_KCVRgH_CJE-3" parent="1" target="ZLzUab_sh_KCVRgH_CJE-9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-9" value="Người mua còn yêu thích sản phẩm không ?" style="rhombus;whiteSpace=wrap;html=1;fontColor=#000000;fillColor=#ffffc0;strokeColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="300" y="210" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-10" value="no" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#FFFFFF;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="ZLzUab_sh_KCVRgH_CJE-9" parent="1" target="ZLzUab_sh_KCVRgH_CJE-15">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="810" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-11" value="yes" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;verticalAlign=top;endArrow=open;endSize=8;strokeColor=#FFFFFF;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="ZLzUab_sh_KCVRgH_CJE-9" parent="1" target="ZLzUab_sh_KCVRgH_CJE-17">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="440" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-15" value="Người mua xóa sản phẩm khỏi danh sách yêu thích" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="590" y="310" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-16" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#FFFFFF;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="ZLzUab_sh_KCVRgH_CJE-15" parent="1" target="ZLzUab_sh_KCVRgH_CJE-17">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZLzUab_sh_KCVRgH_CJE-17" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="425" y="410" width="30" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

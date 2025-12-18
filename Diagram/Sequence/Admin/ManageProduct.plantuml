@@ -1,0 +1,38 @@
+@startuml Sequence Admin Manage Product
+
+actor "Người quản trị" as Admin
+participant "Giao diện hệ thống" as UI
+participant "Hệ thống quản lý sản phẩm" as System
+database "Cơ sở dữ liệu" as DB
+
+Admin -> UI: Chọn chức năng thêm/cập nhật sản phẩm
+UI -> System: Gửi yêu cầu thêm/cập nhật sản phẩm
+System -> System: Kiểm tra tính hợp lệ của thông tin sản phẩm
+
+alt Thông tin sản phẩm không hợp lệ
+    System --> UI: Thông báo "Sản phẩm không hợp lệ"
+else Thông tin hợp lệ
+    System -> DB: Thực hiện thêm hoặc cập nhật sản phẩm
+    DB --> System: Xác nhận lưu thành công
+    System --> UI: Thông báo thêm/cập nhật thành công và hiển thị kết quả
+end
+
+Admin -> UI: Chọn cập nhật số lượng tồn kho
+UI -> System: Gửi yêu cầu cập nhật tồn kho
+System -> System: Kiểm tra số lượng tồn kho hợp lệ
+
+alt Số lượng không hợp lệ
+    System --> UI: Thông báo lỗi "Số lượng tồn không hợp lệ"
+else Số lượng hợp lệ
+    System -> DB: Cập nhật số lượng tồn kho
+    DB --> System: Xác nhận cập nhật thành công
+    System --> UI: Thông báo cập nhật thành công và hiển thị kết quả
+end
+
+Admin -> UI: Chọn chức năng xóa sản phẩm
+UI -> System: Gửi yêu cầu xóa sản phẩm
+System -> DB: Xóa sản phẩm khỏi cơ sở dữ liệu
+DB --> System: Xác nhận xóa thành công
+System --> UI: Gửi thông báo "Đã xóa sản phẩm"
+
+@enduml

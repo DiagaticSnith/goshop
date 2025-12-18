@@ -1,0 +1,53 @@
+@startuml PaymentProcess
+title Sequence Diagram - Buyer Payment Process
+
+skinparam sequence {
+  LifelineBackgroundColor #FFFFFF
+  LifelineBorderColor #1976D2
+  LifelineStyle solid
+  ArrowColor #1976D2
+  ActorBorderColor #1565C0
+  ParticipantBorderColor #1565C0
+  ParticipantBackgroundColor #E3F2FD
+  FontSize 15
+}
+
+actor "Người mua" as Buyer
+participant "Giao diện" as UI
+participant "Hệ thống" as System
+participant "CSDL" as Database
+participant "Cổng thanh toán Stripe" as Stripe
+participant "Email Service" as Email
+
+Buyer -> UI: Đăng nhập
+UI -> System: Xác thực thông tin đăng nhập
+System -> Database: Kiểm tra tài khoản người mua
+Database --> System: Kết quả xác thực
+System --> UI: Đăng nhập thành công
+Buyer -> UI: Xác nhận đặt hàng
+
+UI -> System: Gửi thông tin đơn hàng (sản phẩm, địa chỉ, phương thức thanh toán,…)
+System -> Database: Kiểm tra thông tin giỏ hàng và người mua
+Database --> System: Thông tin đơn hàng
+
+alt Thông tin không hợp lệ
+    System --> UI: Thông báo lỗi và yêu cầu cập nhật thông tin
+else Thông tin hợp lệ
+    alt Phương thức thanh toán không hợp lệ
+        System --> UI: Thông báo lỗi phương thức thanh toán
+    else Phương thức thanh toán hợp lệ
+        System -> Stripe: Gửi yêu cầu thanh toán
+        Stripe --> System: Kết quả thanh toán
+
+        alt Thanh toán thất bại
+            System --> UI: Thông báo lỗi thanh toán
+        else Thanh toán thành công
+            System -> Database: Cập nhật trạng thái đơn hàng (đã thanh toán)
+            System -> Email: Gửi thông báo xác nhận thanh toán
+            Email --> Buyer: Email xác nhận đơn hàng
+            System --> UI: Hiển thị thông báo thanh toán thành công
+        end
+    end
+end
+
+@enduml
