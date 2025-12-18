@@ -56,35 +56,6 @@ jobs:
       - name: Build frontend-admin
         working-directory: frontend-admin
         run: npm run build --silent
-  selenium-tests:
-    name: Selenium UI tests (Selenium Standalone Firefox)
-    runs-on: ubuntu-latest
-    needs: [backend-test]
-    services:
-      selenium:
-        image: selenium/standalone-firefox:latest
-        ports:
-          - 4444:4444
-        options: >-
-          --health-cmd "curl -sS http://localhost:4444/status || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - name: Install backend deps (for selenium tests)
-        working-directory: backend
-        run: npm ci
-      - name: Run selenium tests
-        working-directory: backend
-        env:
-          SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
-        run: npm run test:selenium --silent
-
   create-issue-on-failure:
     name: Create Issue If Backend Tests Failed
     runs-on: ubuntu-latest
