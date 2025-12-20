@@ -1,0 +1,2 @@
+Mở CMD ở ..\k6 lên và nhập lệnh
+./k6 run --out web-dashboard=export=Report_LoadTest_200Users_Long.html test.js
