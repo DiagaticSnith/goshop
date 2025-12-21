@@ -1,0 +1,1 @@
+Chạy npm run test:selenium để chạy test e2e và test giao diện

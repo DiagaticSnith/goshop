@@ -39,6 +39,33 @@ Firebase Authentication dùng để xác thực, cho phép đăng nhập Google.
 -   Hỗ trợ Progressive Web App (PWA)
 -   Kiểm thử E2E với Cypress
 
+## Chương 1 : Giới thiệu về đề tài
+1.1. Tổng quan về đề tài
+GoShop là một ứng dụng web thương mại điện tử được xây dựng với mục tiêu mô phỏng toàn diện hoạt động của một cửa hàng kinh doanh sản phẩm nội thất trong môi trường trực tuyến. Ứng dụng hướng đến việc mang lại trải nghiệm mua sắm thuận tiện, trực quan và dễ sử dụng cho người tiêu dùng, đặc biệt trong bối cảnh thương mại điện tử ngày càng phát triển mạnh mẽ và dần thay đổi thói quen mua sắm truyền thống. Thông qua GoShop, khách hàng có thể dễ dàng tiếp cận nhiều loại sản phẩm nội thất khác nhau, từ đó lựa chọn, đặt mua và thanh toán mà không cần trực tiếp đến cửa hàng, giúp tiết kiệm thời gian và công sức.
+1.2. Công nghệ sử dụng
+-   ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+-   ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+-   ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+-   ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+-   ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
+-   ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
+-   ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
+-   ![Stripe](https://img.shields.io/badge/Stripe-008CDD?style=for-the-badge&logo=Stripe&logoColor=white)
+-   ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=Tailwind-CSS&logoColor=white)
+-   ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase)
+1.3. Thiết kế phần mềm
+1.3.1 Bối cảnh
+GoShop Website là một website thương mại điện tử được xây dựng nhằm đáp ứng nhu cầu nhu cầu mua sắm nội thất trực tuyến. Nên GoShop được xây dựng với các kịch bản kinh doanh cơ bản về: Danh mục sản phẩm, giỏ hàng, quy trình thanh toán, hàng tồn kho, quản lý truy cập, kiểm tra thanh toán, xem đơn hàng , quản lý tài khoản và thống kê chi tiết đơn hàng. Với 2 người dùng chính là người mua và người quản trị.
+
+
+Vai trò chính của người mua hàng là thực hiện các hành động mua sắm trực tuyến. Người mua có thể là khách hàng chưa đăng ký hoặc đã đăng ký tài khoản. Trong đó các hành động chính mà người mua có thể thực hiện là: Duyệt và Tìm Kiếm sản phẩm, Xem chi tiết sản phẩm, quản lý giỏ hàng, thực hiện thanh toán, quản lí thông tin tài khoản, kiểm tra thanh toán.
+
+
+Vai trò chính của người quản trị là quản lý và vận hành toàn bộ hệ thống GoShop để đảm bảo hoạt động kình doanh trôi chảy và hiệu quả. Trong đó các thao tác chính mà người quản trị có thể thực hiện là: quản lý sản phẩm, quản lý danh mục sản phẩm, quản lý đơn hàng, quản lý tài khoản, thống kê doanh thu.
+
+Quy trình danh mục sản phẩm
+<img src="https://github.com/DiagaticSnith/goshop/docs/Picture_UC/activity/Buyer_Product_Catalog.drawio.png">
+
 ## Demo
 ### [Xem website mẫu](https://ecommerce-goshop.onrender.com)
 https://github.com/ke444a/ecommerce-goshop/assets/81090139/3dc1cb1f-b47d-4177-b805-d45688c319f2
@@ -58,23 +85,6 @@ https://github.com/ke444a/ecommerce-goshop/assets/81090139/3dc1cb1f-b47d-4177-b8
 ### Quản trị viên
 <img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/047396bd-56be-4b6d-8fe7-aced3a1a55b5">
 
-## Công nghệ
-
--   ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
--   ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
--   ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
--   ![Redux](https://img.shields.io/badge/redux-%23593d88.svg?style=for-the-badge&logo=redux&logoColor=white)
--   ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
--   ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
--   ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
--   ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
--   ![Stripe](https://img.shields.io/badge/Stripe-008CDD?style=for-the-badge&logo=Stripe&logoColor=white)
--   ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=Tailwind-CSS&logoColor=white)
--   ![Cypress](https://img.shields.io/badge/Cypress-17202C?style=for-the-badge&logo=Cypress&logoColor=white)
--   ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase)
--   ![React Query](https://img.shields.io/badge/-React%20Query-FF4154?style=for-the-badge&logo=react%20query&logoColor=white)
--   ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-0088CC?style=for-the-badge&logo=react-hook-form&logoColor=white)
--   ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
 
 ## Hướng dẫn cài đặt nhanh
 
