@@ -113,8 +113,24 @@ Vai trò chính của người quản trị là quản lý và vận hành toàn
 
 <img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/UseCases/UC_ThanhToan.drawio.png">
 
+### 1.4. Các mô hình khác
 
+**Mô hình ý niệm**
 
+<img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Diagram/ConceptualDiagram/out/concept/ConceptualModel.png">
+
+**Data model**
+- Mức khái niệm
+
+<img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/ERD/ERD_Concept.drawio.png">
+
+- Mức logic
+
+<img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/ERD/ERD_Logic.drawio.png">
+
+- Mức vật lý
+
+<img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/ERD/ERD_Physical.png">
 
 ## Demo
 ### [Xem website mẫu](https://ecommerce-goshop.onrender.com)
