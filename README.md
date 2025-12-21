@@ -7,38 +7,9 @@ Firebase Authentication dùng để xác thực, cho phép đăng nhập Google.
 
 ## Mục lục
 
--   [Tính năng](#tính-năng)
 -   [Giới thiệu về đề tài](#giới-thiệu-về-đề-tài)
 -   [Hướng dẫn cài đặt](#hướng-dẫn-cài-đặt)
 -   [Demo](#demo)
-
-## Tính năng
-
--   Xác thực (đăng nhập, đăng ký, đăng xuất)
-    -   Đăng nhập Google
-    -   Phân quyền người dùng
--   Quản lý thực đơn
-    -   Duyệt các sản phẩm
-    -   Tìm kiếm sản phẩm theo tên hoặc mô tả
-    -   Lọc sản phẩm theo loại
-    -   Sắp xếp sản phẩm theo giá
-    -   Thêm/xóa sản phẩm vào giỏ hàng
-    -   Thêm/xóa sản phẩm vào danh sách yêu thích
--   Quản lý đơn hàng
-    -   Đặt đơn
-    -   Xem chi tiết đơn hàng
--   Thanh toán
-    -   Thanh toán qua Stripe
--   Hồ sơ người dùng
-    -  Xem và cập nhật thông tin cá nhân
--   Quản trị viên
-    -   Xem tất cả sản phẩm
-    -   Tạo, cập nhật, xóa sản phẩm
-    -   Xem tất cả đơn hàng
-    -   Xem và cập nhật thông tin cá nhân
--   Giao diện đáp ứng trên thiết bị di động
--   Hỗ trợ Progressive Web App (PWA)
--   Kiểm thử E2E với Cypress
 
 ## Giới thiệu về đề tài
  ### Tổng quan về đề tài
