@@ -1,10 +1,5 @@
 # Goshop
 
-Ứng dụng web đặt nội thất nhanh trực tuyến, xây dựng với React, Node.js, Express, MySQL (Prisma), và Stripe. Người dùng có thể duyệt thực đơn, thêm sản phẩm vào giỏ hàng, và đặt món. Quản trị viên có thể quản lý thực đơn và đơn hàng.
-</br></br>
-Firebase Authentication dùng để xác thực, cho phép đăng nhập Google. Redux Toolkit quản lý giỏ hàng và danh sách sản phẩm yêu thích. Cloudinary lưu trữ hình ảnh sản phẩm và avatar. Thanh toán qua Stripe. Prisma ORM kết nối MySQL. TailwindCSS dùng để thiết kế giao diện.
-</br>
-
 ## Mục lục
 
 -   [Giới thiệu về đề tài](#giới-thiệu-về-đề-tài)
