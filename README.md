@@ -7,9 +7,10 @@ Firebase Authentication dùng để xác thực, cho phép đăng nhập Google.
 
 ## Mục lục
 
--   [Tính năng](#tinh-nang)
+-   [Tính năng](#tính-năng)
+-   [Giới thiệu về đề tài](#giới-thiệu-về-đề-tài)
+-   [Hướng dẫn cài đặt](#hướng-dẫn-cài-đặt)
 -   [Demo](#demo)
--   [Công nghệ](#cong-nghe)
 
 ## Tính năng
 
@@ -156,7 +157,7 @@ Vai trò chính của người quản trị là quản lý và vận hành toàn
 
 <img width="60%" height="50%" src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/C4/LV4.drawio.png">
 
-## Hướng dẫn cài đặt nhanh
+## Hướng dẫn cài đặt
 
 Những bước tối thiểu để khởi chạy project cục bộ (mô tả ngắn, dùng PowerShell trên Windows):
 
