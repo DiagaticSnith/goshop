@@ -1,53 +1,55 @@
-@startuml Sequence Admin Manage Account
+@startuml
+title Sequence Diagram - Quản lý Tài khoản
 
-actor "Người dùng" as User
-participant "Hệ thống" as System
-participant "Dịch vụ Email" as EmailService
-participant "Admin" as Admin
-database "Cơ sở dữ liệu" as DB
+actor Admin
+participant "UI / Web App" as UI
+participant "Auth Service" as Auth
+participant "Account Service" as AccSvc
+database DB
 
-User -> System: Đăng nhập
-activate System
+== Đăng nhập ==
+Admin -> UI : Nhập thông tin đăng nhập
+UI -> Auth : authenticate(credentials)
+Auth -> DB : verifyAdmin()
+DB --> Auth : adminInfo
+Auth --> UI : loginSuccess
 
-System -> User: Người dùng trả lời câu hỏi bảo mật
-activate User
-User --> System: Câu trả lời
-deactivate User
+== Mở chức năng Quản lý tài khoản ==
+Admin -> UI : Open Account Management
+UI --> Admin : Hiển thị giao diện quản lý tài khoản
 
-alt Câu trả lời đúng
-    System -> System: Xác thực thành công
-    
-    System -> User: Người quản trị được liên hệ?
-    User --> System: Phản hồi
-    
-    alt Có liên hệ được
-        par Xử lý song song
-            System -> System: Thẩm tài khoản
-            System -> EmailService: Gửi mail tới khoản
-            activate EmailService
-            EmailService --> System: Email đã gửi
-            deactivate EmailService
-        end
-        
-        System -> System: Thực hiện thêm hoặc cập nhật tài khoản
-        System -> DB: Lưu vào cơ sở dữ liệu
-        activate DB
-        DB --> System: Lưu thành công
-        deactivate DB
-        
-    else Không liên hệ được
-        System -> System: Xóa tài khoản
-        System -> DB: Cập nhật trạng thái tài khoản
-        activate DB
-        DB --> System: Đã xóa
-        deactivate DB
+== Thực hiện thao tác quản lý ==
+alt Thêm tài khoản
+    Admin -> UI : Nhập thông tin tài khoản mới
+    UI -> AccSvc : validateAccountData(data)
+    AccSvc --> UI : validationResult
+
+    alt Dữ liệu không hợp lệ
+        UI --> Admin : Thông báo thông tin không hợp lệ
+    else Dữ liệu hợp lệ
+        Admin -> UI : Xác nhận lưu
+        UI -> AccSvc : createAccount(data)
+        AccSvc -> DB : insert account
+        DB --> AccSvc : success
+        AccSvc --> UI : confirmation
+        UI --> Admin : Thêm tài khoản thành công
     end
-    
-else Câu trả lời sai
-    System -> System: Thông báo không đủ thông tin để khôi phục
-    System -> User: Từ chối xác thực
-end
 
-System --> User: Kết thúc quy trình
+else Cập nhật tài khoản
+    Admin -> UI : Chỉnh sửa thông tin tài khoản
+    UI -> AccSvc : validateAccountData(data)
+    AccSvc --> UI : validationResult
+
+    alt Dữ liệu không hợp lệ
+        UI --> Admin : Thông báo thông tin không hợp lệ
+    else Dữ liệu hợp lệ
+        Admin -> UI : Xác nhận lưu
+        UI -> AccSvc : updateAccount(accountId, data)
+        AccSvc -> DB : update account
+        DB --> AccSvc : success
+        AccSvc --> UI : confirmation
+        UI --> Admin : Cập nhật tài khoản thành công
+    end
+end
 
 @enduml

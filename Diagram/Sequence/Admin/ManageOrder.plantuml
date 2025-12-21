@@ -1,0 +1,59 @@
+@startuml
+title Sequence Diagram - Thống kê & Quản lý Đơn hàng
+
+actor User
+actor Admin
+participant "UI / Web App" as UI
+participant "Auth Service" as Auth
+participant "Order Service" as OrderSvc
+participant "Report Service" as ReportSvc
+database DB
+
+== Đăng nhập ==
+User -> UI : Nhập thông tin đăng nhập
+UI -> Auth : authenticate(credentials)
+Auth -> DB : verifyUser()
+DB --> Auth : userInfo + role
+Auth --> UI : loginSuccess(role)
+
+== Mở chức năng Thống kê đơn hàng ==
+User -> UI : Open Order Statistics
+UI -> UI : Hiển thị giao diện báo cáo mặc định
+
+alt Người dùng là Khách hàng
+    UI -> OrderSvc : getOrdersByUser(userId)
+    OrderSvc -> DB : query orders by userId
+    DB --> OrderSvc : orderList
+    OrderSvc --> UI : orderList
+    UI --> User : Hiển thị đơn hàng của khách
+else Người dùng là Quản trị
+    UI -> OrderSvc : getAllOrders()
+    OrderSvc -> DB : query all orders
+    DB --> OrderSvc : allOrders
+    OrderSvc --> UI : allOrders
+
+    alt Quản trị cập nhật trạng thái đơn hàng
+        Admin -> UI : Update order status
+        UI -> OrderSvc : updateOrderStatus(orderId, status)
+        OrderSvc -> DB : update order
+        DB --> OrderSvc : success
+        OrderSvc --> UI : confirmation
+    else Quản trị thống kê đơn hàng
+        Admin -> UI : Chọn tiêu chí / thời gian
+        UI -> ReportSvc : generateReport(criteria)
+        ReportSvc -> DB : query order data
+        DB --> ReportSvc : rawData
+        ReportSvc -> ReportSvc : aggregate & calculate
+        ReportSvc --> UI : reportResult
+        UI --> Admin : Hiển thị bảng / biểu đồ
+
+        alt In / Xuất báo cáo
+            Admin -> UI : Export / Print report
+            UI -> ReportSvc : exportReport(format)
+            ReportSvc --> UI : reportFile
+            UI --> Admin : File báo cáo
+        end
+    end
+end
+
+@enduml
