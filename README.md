@@ -40,10 +40,10 @@ Firebase Authentication dùng để xác thực, cho phép đăng nhập Google.
 -   Kiểm thử E2E với Cypress
 
 ## Chương 1 : Giới thiệu về đề tài
-### 1.1. Tổng quan về đề tài
+    ### 1.1. Tổng quan về đề tài
 
 GoShop là một ứng dụng web thương mại điện tử được xây dựng với mục tiêu mô phỏng toàn diện hoạt động của một cửa hàng kinh doanh sản phẩm nội thất trong môi trường trực tuyến. Ứng dụng hướng đến việc mang lại trải nghiệm mua sắm thuận tiện, trực quan và dễ sử dụng cho người tiêu dùng, đặc biệt trong bối cảnh thương mại điện tử ngày càng phát triển mạnh mẽ và dần thay đổi thói quen mua sắm truyền thống. Thông qua GoShop, khách hàng có thể dễ dàng tiếp cận nhiều loại sản phẩm nội thất khác nhau, từ đó lựa chọn, đặt mua và thanh toán mà không cần trực tiếp đến cửa hàng, giúp tiết kiệm thời gian và công sức.
-### 1.2. Công nghệ sử dụng
+    ### 1.2. Công nghệ sử dụng
 -   ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 -   ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
 -   ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
@@ -55,8 +55,8 @@ GoShop là một ứng dụng web thương mại điện tử được xây dự
 -   ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=Tailwind-CSS&logoColor=white)
 -   ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase)
 
-### 1.3. Thiết kế phần mềm
-#### 1.3.1 Bối cảnh
+    ### 1.3. Thiết kế phần mềm
+        #### 1.3.1 Bối cảnh
 GoShop Website là một website thương mại điện tử được xây dựng nhằm đáp ứng nhu cầu nhu cầu mua sắm nội thất trực tuyến. Nên GoShop được xây dựng với các kịch bản kinh doanh cơ bản về: Danh mục sản phẩm, giỏ hàng, quy trình thanh toán, hàng tồn kho, quản lý truy cập, kiểm tra thanh toán, xem đơn hàng , quản lý tài khoản và thống kê chi tiết đơn hàng. Với 2 người dùng chính là người mua và người quản trị.
 
 
@@ -65,7 +65,8 @@ Vai trò chính của người mua hàng là thực hiện các hành động mu
 
 Vai trò chính của người quản trị là quản lý và vận hành toàn bộ hệ thống GoShop để đảm bảo hoạt động kình doanh trôi chảy và hiệu quả. Trong đó các thao tác chính mà người quản trị có thể thực hiện là: quản lý sản phẩm, quản lý danh mục sản phẩm, quản lý đơn hàng, quản lý tài khoản, thống kê doanh thu.
 
-Quy trình danh mục sản phẩm
+**Quy trình danh mục sản phẩm**
+
 <img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/Activity/Buyer_Product_Catalog.drawio.png">
 
 ## Demo
