@@ -2,7 +2,7 @@
 
 Ứng dụng web đặt nội thất nhanh trực tuyến, xây dựng với React, Node.js, Express, MySQL (Prisma), và Stripe. Người dùng có thể duyệt thực đơn, thêm sản phẩm vào giỏ hàng, và đặt món. Quản trị viên có thể quản lý thực đơn và đơn hàng.
 </br></br>
-Firebase Authentication dùng để xác thực, cho phép đăng nhập Google. Redux Toolkit quản lý giỏ hàng và danh sách sản phẩm yêu thích. Cloudinary lưu trữ hình ảnh sản phẩm và avatar. Thanh toán qua Stripe. Prisma ORM kết nối MySQL. TailwindCSS dùng để thiết kế giao diện. Kiểm thử E2E với Cypress.
+Firebase Authentication dùng để xác thực, cho phép đăng nhập Google. Redux Toolkit quản lý giỏ hàng và danh sách sản phẩm yêu thích. Cloudinary lưu trữ hình ảnh sản phẩm và avatar. Thanh toán qua Stripe. Prisma ORM kết nối MySQL. TailwindCSS dùng để thiết kế giao diện.
 </br>
 
 ## Mục lục
@@ -39,11 +39,11 @@ Firebase Authentication dùng để xác thực, cho phép đăng nhập Google.
 -   Hỗ trợ Progressive Web App (PWA)
 -   Kiểm thử E2E với Cypress
 
-## Chương 1 : Giới thiệu về đề tài
- ### 1.1. Tổng quan về đề tài
+## Giới thiệu về đề tài
+ ### Tổng quan về đề tài
 
 GoShop là một ứng dụng web thương mại điện tử được xây dựng với mục tiêu mô phỏng toàn diện hoạt động của một cửa hàng kinh doanh sản phẩm nội thất trong môi trường trực tuyến. Ứng dụng hướng đến việc mang lại trải nghiệm mua sắm thuận tiện, trực quan và dễ sử dụng cho người tiêu dùng, đặc biệt trong bối cảnh thương mại điện tử ngày càng phát triển mạnh mẽ và dần thay đổi thói quen mua sắm truyền thống. Thông qua GoShop, khách hàng có thể dễ dàng tiếp cận nhiều loại sản phẩm nội thất khác nhau, từ đó lựa chọn, đặt mua và thanh toán mà không cần trực tiếp đến cửa hàng, giúp tiết kiệm thời gian và công sức.
- ### 1.2. Công nghệ sử dụng
+ ### Công nghệ sử dụng
 -   ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 -   ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
 -   ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
@@ -55,8 +55,8 @@ GoShop là một ứng dụng web thương mại điện tử được xây dự
 -   ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=Tailwind-CSS&logoColor=white)
 -   ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase)
 
- ### 1.3. Thiết kế phần mềm
-  #### 1.3.1. Bối cảnh
+ ### Thiết kế phần mềm
+  #### 1. Bối cảnh
 GoShop Website là một website thương mại điện tử được xây dựng nhằm đáp ứng nhu cầu nhu cầu mua sắm nội thất trực tuyến. Nên GoShop được xây dựng với các kịch bản kinh doanh cơ bản về: Danh mục sản phẩm, giỏ hàng, quy trình thanh toán, hàng tồn kho, quản lý truy cập, kiểm tra thanh toán, xem đơn hàng , quản lý tài khoản và thống kê chi tiết đơn hàng. Với 2 người dùng chính là người mua và người quản trị.
 
 
@@ -65,7 +65,7 @@ Vai trò chính của người mua hàng là thực hiện các hành động mu
 
 Vai trò chính của người quản trị là quản lý và vận hành toàn bộ hệ thống GoShop để đảm bảo hoạt động kình doanh trôi chảy và hiệu quả. Trong đó các thao tác chính mà người quản trị có thể thực hiện là: quản lý sản phẩm, quản lý danh mục sản phẩm, quản lý đơn hàng, quản lý tài khoản, thống kê doanh thu.
 
-  #### 1.3.2. Quy trình nghiệp vụ
+  #### 2. Quy trình nghiệp vụ
 
 **Quy trình khám phá sản phẩm**
 
@@ -83,7 +83,7 @@ Vai trò chính của người quản trị là quản lý và vận hành toàn
 
 <img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/BusinessFlow/QLHeThong.drawio.png">
 
-  #### 1.3.3. Use Cases
+  #### 3. Use Cases
 
 **Sơ đồ Use Case tổng thể**
 
@@ -113,7 +113,7 @@ Vai trò chính của người quản trị là quản lý và vận hành toàn
 
 <img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/UseCases/UC_ThanhToan.drawio.png">
 
-### 1.4. Các mô hình khác
+### 4. Các mô hình khác
 
 **Mô hình ý niệm**
 
@@ -132,25 +132,29 @@ Vai trò chính của người quản trị là quản lý và vận hành toàn
 
 <img src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/ERD/ERD_Physical.png">
 
-## Demo
-### [Xem website mẫu](https://ecommerce-goshop.onrender.com)
-https://github.com/ke444a/ecommerce-goshop/assets/81090139/3dc1cb1f-b47d-4177-b805-d45688c319f2
+### 5.Thiết kế kiến trúc
 
-### Trang chủ
-<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/8c35717c-ca67-49f6-8a96-c02fc36e08f7">
+#### Sơ đồ khối
 
-### Sản phẩm
-<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/c0cdd67a-a367-4d50-9255-2b10491d244b">
+<img width="60%" height="50%" src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Diagram/Building_Block/BlockDiagram.drawio.png">
 
-### Giỏ hàng
-<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/1426e48e-4035-457d-87f2-502f60a82a24">
+#### C4 Models
 
-### Đơn hàng
-<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/8280a299-52b7-4a87-8910-e41a9d31988d">
+- **C1 - Context**
 
-### Quản trị viên
-<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/047396bd-56be-4b6d-8fe7-aced3a1a55b5">
+<img width="60%" height="50%" src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/C4/LV1.drawio.png">
 
+- **C2 - Containers**
+
+<img width="60%" height="50%" src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/C4/LV2.drawio.png">
+
+- **C3 - Components(high-level)**
+
+<img width="60%" height="50%" src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/C4/LV3.drawio.png">
+
+- **C4 - Code**
+
+<img width="60%" height="50%" src="https://github.com/DiagaticSnith/goshop/blob/main/docs/Picture_UC/C4/LV4.drawio.png">
 
 ## Hướng dẫn cài đặt nhanh
 
@@ -219,3 +223,21 @@ Nếu gặp lỗi, kiểm tra logs:
 docker-compose logs -f backend
 docker-compose logs -f db
 ```
+## Demo
+### [Xem website mẫu](https://ecommerce-goshop.onrender.com)
+https://github.com/ke444a/ecommerce-goshop/assets/81090139/3dc1cb1f-b47d-4177-b805-d45688c319f2
+
+### Trang chủ
+<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/8c35717c-ca67-49f6-8a96-c02fc36e08f7">
+
+### Sản phẩm
+<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/c0cdd67a-a367-4d50-9255-2b10491d244b">
+
+### Giỏ hàng
+<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/1426e48e-4035-457d-87f2-502f60a82a24">
+
+### Đơn hàng
+<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/8280a299-52b7-4a87-8910-e41a9d31988d">
+
+### Quản trị viên
+<img width="60%" height="50%" src="https://github.com/ke444a/ecommerce-goshop/assets/81090139/047396bd-56be-4b6d-8fe7-aced3a1a55b5">
